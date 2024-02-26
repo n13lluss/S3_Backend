@@ -10,12 +10,18 @@ namespace Travelblog.Api.Controllers
     [ApiController]
     public class BlogController : ControllerBase
     {
-        public List<Blog> blogs = new List<Blog>();
+        private readonly List<Blog> blogs1 = new List<Blog>();
+        private IBlogService _blogService;
+        public BlogController(IBlogService blogservice) {
+            _blogService = blogservice;
+        }
+
         // GET: api/<BlogController>
         [HttpGet]
         [Route("getAll")]
         public IEnumerable<Blog> Get()
         {
+            List<Blog> blogs = _blogService.GetBlogList();
             return blogs.ToArray();
         }
 
@@ -23,7 +29,7 @@ namespace Travelblog.Api.Controllers
         [HttpGet("getById={id}")]
         public Blog Get(int id)
         {
-            return blogs[id];
+            return blogs1[id];
         }
 
         // POST api/<BlogController>
@@ -34,9 +40,9 @@ namespace Travelblog.Api.Controllers
             {
                 return BadRequest("Invalid input");
             }
-            newBlog.Id = blogs.Count;
+            newBlog.Id = blogs1.Count;
             newBlog.StartDate = DateTime.UtcNow;
-            blogs.Add(newBlog);
+            blogs1.Add(newBlog);
             return CreatedAtAction(nameof(Get), new { id = newBlog.Id }, newBlog);
         }
 
@@ -44,7 +50,7 @@ namespace Travelblog.Api.Controllers
         [HttpPut("update={id}")]
         public IActionResult Put(int id, [FromBody] Blog updatedBlog)
         {
-            if (id < 0 || id >= blogs.Count)
+            if (id < 0 || id >= blogs1.Count)
             {
                 return NotFound();
             }
@@ -52,7 +58,7 @@ namespace Travelblog.Api.Controllers
             {
                 return BadRequest("Invalid input");
             }
-            blogs[id] = updatedBlog;
+            blogs1[id] = updatedBlog;
             return NoContent();
         }
 
@@ -60,11 +66,11 @@ namespace Travelblog.Api.Controllers
         [HttpDelete("delete={id}")]
         public IActionResult Delete(int id)
         {
-            if (id < 0 || id >= blogs.Count)
+            if (id < 0 || id >= blogs1.Count)
             {
                 return NotFound();
             }
-            blogs.RemoveAt(id);
+            blogs1.RemoveAt(id);
             return NoContent();
         }
     }

@@ -1,3 +1,7 @@
+using Travelblog.Core.Interfaces;
+using Travelblog.Core.Services;
+using Travelblog.Dal.Repositories;
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,10 +11,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000");
+                          policy.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app");
                       });
 });
 
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 // Add services to the container.
 
 builder.Services.AddControllers();
