@@ -2,8 +2,8 @@
 
 namespace Travelblog.Core.Interfaces
 {
-    public interface IBlogRepository
+    public interface IUserRepository
     {
-        List<Blog> GetAll();
+        User GetById(int id);
     }
 }

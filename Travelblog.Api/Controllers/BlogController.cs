@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Travelblog.Api.Models;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
@@ -12,17 +13,30 @@ namespace Travelblog.Api.Controllers
     {
         private readonly List<Blog> blogs1 = new List<Blog>();
         private IBlogService _blogService;
-        public BlogController(IBlogService blogservice) {
+        private IUserService _userService;
+        public BlogController(IBlogService blogservice, IUserService userService) {
             _blogService = blogservice;
+            _userService = userService;
         }
 
         // GET: api/<BlogController>
         [HttpGet]
         [Route("getAll")]
-        public IEnumerable<Blog> Get()
+        public IEnumerable<BlogSlim> Get()
         {
             List<Blog> blogs = _blogService.GetBlogList();
-            return blogs.ToArray();
+            List<BlogSlim> smallBlogs = blogs.Select(blog =>
+            {
+                return new BlogSlim
+                {
+                    Id = blog.Id,
+                    User_Name = _userService.GetNameById(blog.User_Id),
+                    Name = blog.Name,
+                    Posted_On = blog.StartDate,
+                };
+            }).ToList();
+
+            return smallBlogs;
         }
 
         // GET api/<BlogController>/5

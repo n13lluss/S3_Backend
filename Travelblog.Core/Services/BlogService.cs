@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Travelblog.Core.Interfaces;
+﻿using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
@@ -41,7 +36,9 @@ namespace Travelblog.Core.Services
 
         public List<Blog> GetBlogList()
         {
-            return _repository.GetAll();
+            List<Blog> blogList = new List<Blog>();
+            blogList = _repository.GetAll();
+            return blogList;
         }
 
         public List<User> GetFollowers(int Id)

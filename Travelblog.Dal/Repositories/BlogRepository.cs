@@ -1,58 +1,33 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
-using System.Data.SqlClient;
+﻿using Travelblog.Api;
 using Travelblog.Core.Interfaces;
-using Travelblog.Core.Models;
 
 namespace Travelblog.Dal.Repositories
 {
     public class BlogRepository : IBlogRepository
     {
-        private readonly string? _connectionString;
-        private SqlConnection sqlConnection;
+        private readonly TravelBlogDbContext _dbContext;
 
-        public BlogRepository(IConfiguration configuration)
+        public BlogRepository(TravelBlogDbContext dbContext)
         {
-            _connectionString = configuration.GetConnectionString("SchoolConnection");
-            sqlConnection = new SqlConnection(_connectionString);
+            _dbContext = dbContext;
         }
 
-        public List<Blog> GetAll()
+        public List<Core.Models.Blog> GetAll()
         {
-            List<Blog> blogs = new List<Blog>();
-
-            using (var connection = new SqlConnection(_connectionString))
+            // Perform the conversion from entity to core model
+            return _dbContext.Blogs.Select(blogEntity => new Core.Models.Blog
             {
-                connection.Open();
-
-                // Assuming "Blog" is your table name
-                string query = "SELECT * FROM [dbo].[Blog]";
-
-                using (SqlCommand command = new SqlCommand(query, connection))
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        Blog blog = new Blog
-                        {
-                            // Property names in the model match the column names in the database
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            User_Id = reader.GetInt32(reader.GetOrdinal("Creator_Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            StartDate = reader.GetDateTime(reader.GetOrdinal("Start_Date")),
-                            Likes = reader.GetInt32(reader.GetOrdinal("Likes")),
-                            IsPrive = reader.GetBoolean(reader.GetOrdinal("Prive")),
-                            IsSuspended = reader.GetBoolean(reader.GetOrdinal("Suspended")),
-                            IsDeleted = reader.GetBoolean(reader.GetOrdinal("Deleted")),
-                            Trip_Id = 0
-                        };
-
-                        blogs.Add(blog);
-                    }
-                }
-            }
-
-            return blogs;
+                // Map properties accordingly
+                Id = blogEntity.Id,
+                User_Id = blogEntity.CreatorId,
+                Name = blogEntity.Name,
+                StartDate = blogEntity.StartDate,
+                Likes = blogEntity.Likes,
+                IsPrive = blogEntity.Prive,
+                IsSuspended = blogEntity.Suspended,
+                IsDeleted = blogEntity.Deleted,
+                Trip_Id = 0 // Adjust as needed
+            }).ToList();
         }
     }
 }
