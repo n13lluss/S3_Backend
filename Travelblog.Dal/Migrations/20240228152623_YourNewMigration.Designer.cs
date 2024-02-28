@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Travelblog.Api;
+using Travelblog.Dal;
 
 #nullable disable
 
-namespace Travelblog.Api.Migrations
+namespace Travelblog.Dal.Migrations
 {
     [DbContext(typeof(TravelBlogDbContext))]
-    partial class Dbi427798Sem3ContextModelSnapshot : ModelSnapshot
+    [Migration("20240228152623_YourNewMigration")]
+    partial class YourNewMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

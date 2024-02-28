@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Travelblog.Api;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Services;
+using Travelblog.Dal;
 using Travelblog.Dal.Repositories;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -29,7 +29,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<TravelBlogDbContext>(options =>
-    options.UseSqlServer("Server = mssqlstud.fhict.local; Database = dbi427798_Sem3; User Id = dbi427798_Sem3; Password = Britt2003!;"), ServiceLifetime.Scoped);
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolConnection")), ServiceLifetime.Scoped);
 
 var app = builder.Build();
 

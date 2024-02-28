@@ -1,5 +1,4 @@
-﻿using Travelblog.Api;
-using Travelblog.Core.Interfaces;
+﻿using Travelblog.Core.Interfaces;
 
 namespace Travelblog.Dal.Repositories
 {
