@@ -11,7 +11,6 @@ namespace Travelblog.Api.Controllers
     [ApiController]
     public class BlogController : ControllerBase
     {
-        private readonly List<Blog> blogs1 = new List<Blog>();
         private IBlogService _blogService;
         private IUserService _userService;
         public BlogController(IBlogService blogservice, IUserService userService) {
@@ -63,7 +62,7 @@ namespace Travelblog.Api.Controllers
         [HttpPut("update={id}")]
         public IActionResult Put(int id, [FromBody] Blog updatedBlog)
         {
-            if (id < 0 || id >= blogs1.Count)
+            if (id < 1000)
             {
                 return NotFound();
             }
@@ -80,7 +79,7 @@ namespace Travelblog.Api.Controllers
         [HttpDelete("delete={id}")]
         public IActionResult Delete(int id)
         {
-            if (id < 0 || id >= blogs1.Count)
+            if (id < 1000)
             {
                 return NotFound();
             }

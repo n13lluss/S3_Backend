@@ -70,7 +70,7 @@ namespace Travelblog.Dal.Repositories
                 existingBlogEntity.Prive = blog.IsPrive;
                 existingBlogEntity.Suspended = blog.IsSuspended;
                 existingBlogEntity.Deleted = blog.IsDeleted;
-                existingBlogEntity.TripId = blog.Trip_Id; // Adjust as needed
+                existingBlogEntity.TripId = null; // Adjust as needed
 
                 // Save changes
                 _dbContext.SaveChanges();
