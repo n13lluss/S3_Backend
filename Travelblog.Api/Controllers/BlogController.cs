@@ -22,12 +22,12 @@ namespace Travelblog.Api.Controllers
         // GET: api/<BlogController>
         [HttpGet]
         [Route("getAll")]
-        public IEnumerable<BlogSlim> Get()
+        public IEnumerable<BlogSlimDTO> Get()
         {
             List<Blog> blogs = _blogService.GetBlogList();
-            List<BlogSlim> smallBlogs = blogs.Select(blog =>
+            List<BlogSlimDTO> smallBlogs = blogs.Select(blog =>
             {
-                return new BlogSlim
+                return new BlogSlimDTO
                 {
                     Id = blog.Id,
                     User_Name = _userService.GetNameById(blog.User_Id),

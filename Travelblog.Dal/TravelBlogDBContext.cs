@@ -532,6 +532,4 @@ public partial class TravelBlogDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

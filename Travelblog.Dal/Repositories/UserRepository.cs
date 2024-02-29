@@ -1,59 +1,31 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Data.SqlClient;
-using Travelblog.Core.Interfaces;
-using Travelblog.Core.Models;
+﻿using Travelblog.Core.Interfaces;
 
 namespace Travelblog.Dal.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly string? _connectionString;
-        private SqlConnection sqlConnection;
+        private readonly TravelBlogDbContext _dbContext;
 
-        public UserRepository(IConfiguration configuration)
+        public UserRepository(TravelBlogDbContext dbContext)
         {
-            _connectionString = configuration.GetConnectionString("SchoolConnection");
-            sqlConnection = new SqlConnection(_connectionString);
+            _dbContext = dbContext;
         }
 
-        public User GetById(int id)
+        public Core.Models.User GetById(int id)
         {
-            using (var connection = new SqlConnection(_connectionString))
+            Entities.User user = _dbContext.Users.FirstOrDefault(u => u.Id == id);
+
+            if (user != null)
             {
-                connection.Open();
-
-                // Assuming "User" is your table name
-                string query = "SELECT * FROM [dbo].[User] WHERE Id = @UserId";
-
-                using (SqlCommand command = new SqlCommand(query, connection))
+                return new Core.Models.User
                 {
-                    command.Parameters.AddWithValue("@UserId", id);
-
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return MapReaderToUser(reader);
-                        }
-                    }
-                }
+                    Id = user.Id,
+                    UserName = user.Username,
+                    Email = user.Email
+                };
             }
 
-            return null; // User with the specified ID not found
-        }
-
-        private User MapReaderToUser(SqlDataReader reader)
-        {
-            return new User
-            {
-                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                UserName = reader.GetString(reader.GetOrdinal("Username")),
-                Password = reader.GetString(reader.GetOrdinal("Password")),
-                Email = reader.GetString(reader.GetOrdinal("Email")),
-                Suspended = reader.GetBoolean(reader.GetOrdinal("Suspended")),
-                Role = reader.GetString(reader.GetOrdinal("Role")),
-                // Add other properties as needed
-            };
+            return new Core.Models.User();
         }
     }
 }

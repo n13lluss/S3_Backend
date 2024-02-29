@@ -1,6 +1,6 @@
 ﻿namespace Travelblog.Api.Models
 {
-    public class BlogSlim
+    public class BlogSlimDTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
