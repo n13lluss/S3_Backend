@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Services;
+using Travelblog.Dal;
 using Travelblog.Dal.Repositories;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -17,12 +19,17 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
-// Add services to the container.
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<TravelBlogDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolConnection")), ServiceLifetime.Scoped);
 
 var app = builder.Build();
 

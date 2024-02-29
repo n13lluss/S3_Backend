@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Travelblog.Api.Models;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
@@ -12,27 +13,41 @@ namespace Travelblog.Api.Controllers
     {
         private readonly List<Blog> blogs1 = new List<Blog>();
         private IBlogService _blogService;
-        public BlogController(IBlogService blogservice) {
+        private IUserService _userService;
+        public BlogController(IBlogService blogservice, IUserService userService) {
             _blogService = blogservice;
+            _userService = userService;
         }
 
-        // GET: api/<BlogController>
-        [HttpGet]
-        [Route("getAll")]
-        public IEnumerable<Blog> Get()
+        [HttpGet("getAll")]
+        public IActionResult Get()
         {
-            List<Blog> blogs = _blogService.GetBlogList();
-            return blogs.ToArray();
+            List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList().Select(blog =>
+            {
+                return new BlogSlimDTO
+                {
+                    Id = blog.Id,
+                    User_Name = _userService.GetNameById(blog.User_Id), 
+                    Name = blog.Name,
+                    Posted_On = blog.StartDate,
+                };
+            }).ToList();
+
+            return Ok(smallBlogs);
         }
 
-        // GET api/<BlogController>/5
         [HttpGet("getById={id}")]
-        public Blog Get(int id)
+        public IActionResult Get(int id)
         {
-            return blogs1[id];
+            Blog blog = _blogService.GetBlogById(id);
+            if (blog == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(blog);
         }
 
-        // POST api/<BlogController>
         [HttpPost("create")]
         public IActionResult Create([FromBody] Blog newBlog)
         {
@@ -40,13 +55,11 @@ namespace Travelblog.Api.Controllers
             {
                 return BadRequest("Invalid input");
             }
-            newBlog.Id = blogs1.Count;
-            newBlog.StartDate = DateTime.UtcNow;
-            blogs1.Add(newBlog);
-            return CreatedAtAction(nameof(Get), new { id = newBlog.Id }, newBlog);
+
+            Blog createdBlog = _blogService.CreateBlog(newBlog);
+            return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
         }
 
-        // PUT api/<BlogController>/5
         [HttpPut("update={id}")]
         public IActionResult Put(int id, [FromBody] Blog updatedBlog)
         {
@@ -54,15 +67,16 @@ namespace Travelblog.Api.Controllers
             {
                 return NotFound();
             }
+
             if (updatedBlog == null)
             {
                 return BadRequest("Invalid input");
             }
-            blogs1[id] = updatedBlog;
+
+            _blogService.UpdateBlog(updatedBlog);
             return NoContent();
         }
 
-        // DELETE api/<BlogController>/5
         [HttpDelete("delete={id}")]
         public IActionResult Delete(int id)
         {
@@ -70,7 +84,10 @@ namespace Travelblog.Api.Controllers
             {
                 return NotFound();
             }
-            blogs1.RemoveAt(id);
+
+            Blog DeletedBlog = _blogService.GetBlogById(id);
+            DeletedBlog.IsDeleted = true;
+            _blogService.UpdateBlog(DeletedBlog);
             return NoContent();
         }
     }

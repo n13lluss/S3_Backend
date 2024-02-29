@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Travelblog.Core.Models;
+﻿using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Interfaces
 {
@@ -12,7 +7,7 @@ namespace Travelblog.Core.Interfaces
         public Blog CreateBlog(Blog blog);
         public Blog UpdateBlog(Blog blog);
         public List<Blog> GetBlogList();
-        public Blog GetBlogById(string id);
+        public Blog GetBlogById(int id);
         public Blog LikeBlog(Blog blog, User user);
         public Blog UnLikeBlog(Blog blog, User user);
         public Blog AddPost (Post post);
