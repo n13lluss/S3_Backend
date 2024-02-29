@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Travelblog.Api.Models;
+using Travelblog.Api.Models.BlogDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
@@ -21,19 +21,20 @@ namespace Travelblog.Api.Controllers
         [HttpGet("getAll")]
         public IActionResult Get()
         {
-            List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList().Select(blog =>
-            {
-                return new BlogSlimDTO
+            List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList()
+                .Where(blog => !blog.IsDeleted) // Filter out deleted blogs
+                .Select(blog => new BlogSlimDTO
                 {
                     Id = blog.Id,
-                    User_Name = _userService.GetNameById(blog.User_Id), 
+                    User_Name = _userService.GetNameById(blog.User_Id),
                     Name = blog.Name,
                     Posted_On = blog.StartDate,
-                };
-            }).ToList();
+                })
+                .ToList();
 
             return Ok(smallBlogs);
         }
+
 
         [HttpGet("getById={id}")]
         public IActionResult Get(int id)
@@ -48,21 +49,30 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult Create([FromBody] Blog newBlog)
+        public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
-            if (newBlog == null)
+            if (CreatedBlog == null)
             {
                 return BadRequest("Invalid input");
             }
+
+            Blog newBlog = new()
+            {
+                User_Id = CreatedBlog.UserId,
+                Name = CreatedBlog.Name,
+                StartDate = CreatedBlog.CreationTime
+            };
 
             Blog createdBlog = _blogService.CreateBlog(newBlog);
             return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
         }
 
         [HttpPut("update={id}")]
-        public IActionResult Put(int id, [FromBody] Blog updatedBlog)
+        public IActionResult Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
-            if (id < 1000)
+            Blog found = _blogService.GetBlogById(id);
+
+            if (found == null)
             {
                 return NotFound();
             }
@@ -72,14 +82,21 @@ namespace Travelblog.Api.Controllers
                 return BadRequest("Invalid input");
             }
 
-            _blogService.UpdateBlog(updatedBlog);
+            found.Name = updatedBlog.Name;
+            found.IsSuspended = updatedBlog.IsSuspended;
+            found.IsDeleted = updatedBlog.IsDeleted;
+            found.IsPrive = updatedBlog.IsPrive;
+            found.Trip_Id = updatedBlog.Trip_Id;
+
+
+            _blogService.UpdateBlog(found);
             return NoContent();
         }
 
         [HttpDelete("delete={id}")]
         public IActionResult Delete(int id)
         {
-            if (id < 1000)
+            if (_blogService.GetBlogById(id) == null)
             {
                 return NotFound();
             }

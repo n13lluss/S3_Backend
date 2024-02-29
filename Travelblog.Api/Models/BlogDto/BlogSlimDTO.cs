@@ -1,4 +1,4 @@
-﻿namespace Travelblog.Api.Models
+﻿namespace Travelblog.Api.Models.BlogDto
 {
     public class BlogSlimDTO
     {
