@@ -12,8 +12,8 @@ using Travelblog.Dal;
 namespace Travelblog.Dal.Migrations
 {
     [DbContext(typeof(TravelBlogDbContext))]
-    [Migration("20240228152623_YourNewMigration")]
-    partial class YourNewMigration
+    [Migration("20240229210159_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

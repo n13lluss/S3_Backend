@@ -83,6 +83,7 @@ namespace Travelblog.Api.Controllers
             }
 
             found.Name = updatedBlog.Name;
+            found.Description = updatedBlog.Description;
             found.IsSuspended = updatedBlog.IsSuspended;
             found.IsDeleted = updatedBlog.IsDeleted;
             found.IsPrive = updatedBlog.IsPrive;

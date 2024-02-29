@@ -16,7 +16,8 @@ namespace Travelblog.Core.Services
 
         public Blog UpdateBlog(Blog blog)
         {
-            return _repository.Update(blog);
+            Blog UpdatedBlog = _repository.Update(blog);
+            return UpdatedBlog;
         }
 
         public Blog GetBlogById(int id)

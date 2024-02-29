@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
@@ -12,32 +14,27 @@ namespace Travelblog.Dal.Repositories
 
         public BlogRepository(TravelBlogDbContext dbContext)
         {
-            _dbContext = dbContext;
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         public List<Blog> GetAll()
         {
-            // Perform the conversion from entity to core model
-            return _dbContext.Blogs.Select(blogEntity => new Blog
-            {
-                // Map properties accordingly
-                Id = blogEntity.Id,
-                User_Id = blogEntity.CreatorId,
-                Name = blogEntity.Name,
-                StartDate = blogEntity.StartDate,
-                Likes = blogEntity.Likes,
-                IsPrive = blogEntity.Prive,
-                IsSuspended = blogEntity.Suspended,
-                IsDeleted = blogEntity.Deleted,
-            }).ToList();
+            return _dbContext.Blogs
+                .Select(blogEntity => MapEntityToCoreModel(blogEntity))
+                .ToList();
+        }
+
+        public async Task<List<Blog>> GetAllAsync()
+        {
+            return await _dbContext.Blogs
+                .Select(blogEntity => MapEntityToCoreModel(blogEntity))
+                .ToListAsync();
         }
 
         public Blog Create(Blog blog)
         {
-            // Convert from core model to entity
             var blogEntity = new Entities.Blog
             {
-                // Map properties accordingly
                 CreatorId = blog.User_Id,
                 Name = blog.Name,
                 StartDate = blog.StartDate,
@@ -45,68 +42,75 @@ namespace Travelblog.Dal.Repositories
                 Prive = blog.IsPrive,
                 Suspended = blog.IsSuspended,
                 Deleted = blog.IsDeleted,
-                TripId = blog.Trip_Id // Adjust as needed
+                TripId = null
             };
 
-            // Add to the database context and save changes
             _dbContext.Blogs.Add(blogEntity);
-            _dbContext.SaveChanges();
 
-            // Return the updated entity
-            return MapEntityToCoreModel(blogEntity);
+            try
+            {
+                _dbContext.SaveChanges();
+                return MapEntityToCoreModel(blogEntity);
+            }
+            catch (DbUpdateException ex)
+            {
+                return null;
+            }
         }
 
         public Blog Update(Blog blog)
         {
-            // Find the existing blog entity
-            var existingBlogEntity = _dbContext.Blogs.Find(blog.Id);
+            var existingBlogEntity = _dbContext.Blogs.FirstOrDefault(b => b.Id == blog.Id);
 
             if (existingBlogEntity != null)
             {
-                // Update properties accordingly
                 existingBlogEntity.Name = blog.Name;
                 existingBlogEntity.StartDate = blog.StartDate;
                 existingBlogEntity.Likes = blog.Likes;
                 existingBlogEntity.Prive = blog.IsPrive;
                 existingBlogEntity.Suspended = blog.IsSuspended;
                 existingBlogEntity.Deleted = blog.IsDeleted;
-                existingBlogEntity.TripId = null; // Adjust as needed
+                existingBlogEntity.Description = blog.Description;
+                existingBlogEntity.TripId = null;
 
-                // Save changes
-                _dbContext.SaveChanges();
-
-                // Return the updated entity
-                return MapEntityToCoreModel(existingBlogEntity);
+                try
+                {
+                    _dbContext.SaveChanges();
+                    return MapEntityToCoreModel(existingBlogEntity);
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Handle the exception (log, rethrow, or return null)
+                    return null;
+                }
             }
 
-            return null; // Blog not found
+            return null;
         }
 
         public Blog GetById(int id)
         {
-            // Find and return the blog entity by id
-            var blogEntity = _dbContext.Blogs.Find(id);
+            var blogEntity = _dbContext.Blogs.FirstOrDefault(blog => blog.Id == id);
             return MapEntityToCoreModel(blogEntity);
         }
 
-        // Other methods like Delete, AddCountry, AddFollower, etc. can be implemented similarly
-
-        private Blog MapEntityToCoreModel(Entities.Blog entity)
+        private static Blog MapEntityToCoreModel(Entities.Blog entity)
         {
-            if (entity == null)
-                return null;
-
-            return new Blog
-            {
-                Id = entity.Id,
-                User_Id = entity.CreatorId,
-                Name = entity.Name,
-                Likes = entity.Likes,
-                StartDate = entity.StartDate,
-                IsPrive = entity.Prive,
-                IsSuspended = entity.Suspended,
-                IsDeleted = entity.Deleted
-            };
+            return entity != null
+                ? new Blog
+                {
+                    Id = entity.Id,
+                    User_Id = entity.CreatorId,
+                    Name = entity.Name,
+                    Description = entity.Description,
+                    Likes = entity.Likes,
+                    StartDate = entity.StartDate,
+                    IsPrive = entity.Prive,
+                    IsSuspended = entity.Suspended,
+                    IsDeleted = entity.Deleted
+                }
+                : new Blog();
         }
+
     }
 }

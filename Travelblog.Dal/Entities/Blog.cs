@@ -7,6 +7,7 @@ public partial class Blog
     public int CreatorId { get; set; }
 
     public string Name { get; set; } = null!;
+    public string Description { get; set; }
 
     public DateTime StartDate { get; set; }
 
