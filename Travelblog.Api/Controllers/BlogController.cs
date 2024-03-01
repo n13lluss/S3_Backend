@@ -18,7 +18,7 @@ namespace Travelblog.Api.Controllers
             _userService = userService;
         }
 
-        [HttpGet("getAll")]
+        [HttpGet]
         public IActionResult Get()
         {
             List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList()
@@ -28,7 +28,9 @@ namespace Travelblog.Api.Controllers
                     Id = blog.Id,
                     User_Name = _userService.GetNameById(blog.User_Id),
                     Name = blog.Name,
+                    Description = blog.Description,
                     Posted_On = blog.StartDate,
+                    likes = blog.Likes,
                 })
                 .ToList();
 
@@ -36,19 +38,35 @@ namespace Travelblog.Api.Controllers
         }
 
 
-        [HttpGet("getById={id}")]
+        [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
             Blog blog = _blogService.GetBlogById(id);
+            BlogViewDto blogViewDto = new BlogViewDto()
+            {
+                Id = blog.Id,
+                User_Name = _userService.GetNameById(blog.User_Id),
+                Name = blog.Name,
+                Description = blog.Description,
+                StartDate = blog.StartDate,
+                Likes = blog.Likes,
+                Posts = blog.Posts,
+                Followers = blog.Followers.Count(),
+                IsDeleted = blog.IsDeleted,
+                IsPrive = blog.IsPrive,
+                IsSuspended = blog.IsSuspended,
+                Countries = blog.Countries,
+
+            };
             if (blog == null)
             {
                 return NotFound();
             }
 
-            return Ok(blog);
+            return Ok(blogViewDto);
         }
 
-        [HttpPost("create")]
+        [HttpPost]
         public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
             if (CreatedBlog == null)
@@ -60,6 +78,7 @@ namespace Travelblog.Api.Controllers
             {
                 User_Id = CreatedBlog.UserId,
                 Name = CreatedBlog.Name,
+                Description= CreatedBlog.Description,
                 StartDate = CreatedBlog.CreationTime
             };
 
@@ -67,7 +86,7 @@ namespace Travelblog.Api.Controllers
             return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
         }
 
-        [HttpPut("update={id}")]
+        [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
             Blog found = _blogService.GetBlogById(id);
@@ -94,7 +113,7 @@ namespace Travelblog.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("delete={id}")]
+        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             if (_blogService.GetBlogById(id) == null)

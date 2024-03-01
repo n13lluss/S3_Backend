@@ -11,11 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy =>
+                      builder =>
                       {
-                          policy.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app");
+                          builder.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app")
+                                 .WithMethods("GET", "POST", "PUT", "DELETE");
                       });
 });
+
+
 
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
