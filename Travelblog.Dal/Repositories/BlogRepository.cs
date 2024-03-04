@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
+using Travelblog.Core.Services;
 
 namespace Travelblog.Dal.Repositories
 {
@@ -19,9 +20,9 @@ namespace Travelblog.Dal.Repositories
 
         public List<Blog> GetAll()
         {
-            return _dbContext.Blogs
-                .Select(blogEntity => MapEntityToCoreModel(blogEntity))
-                .ToList();
+            var blogs = _dbContext.Blogs.ToList();
+            List<Blog> result = blogs.Select(blog => MapEntityToCoreModel(blog)).ToList();
+            return result;
         }
 
         public async Task<List<Blog>> GetAllAsync()
@@ -37,6 +38,7 @@ namespace Travelblog.Dal.Repositories
             {
                 CreatorId = blog.User_Id,
                 Name = blog.Name,
+                Description = blog.Description,
                 StartDate = blog.StartDate,
                 Likes = blog.Likes,
                 Prive = blog.IsPrive,

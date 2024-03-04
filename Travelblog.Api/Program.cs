@@ -11,14 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
-                      builder =>
+                      policy =>
                       {
-                          builder.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app")
-                                 .WithMethods("GET", "POST", "PUT", "DELETE");
+                          policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod();
                       });
 });
-
-
 
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
@@ -31,6 +28,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<TravelBlogDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolConnection")), ServiceLifetime.Scoped);
 
@@ -46,6 +44,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors(MyAllowSpecificOrigins);
+app.UseRouting();
 
 app.UseAuthorization();
 

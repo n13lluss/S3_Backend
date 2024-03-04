@@ -13,9 +13,11 @@ namespace Travelblog.Api.Controllers
     {
         private IBlogService _blogService;
         private IUserService _userService;
-        public BlogController(IBlogService blogservice, IUserService userService) {
+        private IConfiguration _configuration;
+        public BlogController(IConfiguration configuration ,IBlogService blogservice, IUserService userService) {
             _blogService = blogservice;
             _userService = userService;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -69,6 +71,11 @@ namespace Travelblog.Api.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
+            //Adding default user information 
+            User DefaultUser = new User();
+            _configuration.GetSection("DefaultUser").Bind(DefaultUser);
+            //
+
             if (CreatedBlog == null)
             {
                 return BadRequest("Invalid input");
@@ -76,10 +83,10 @@ namespace Travelblog.Api.Controllers
 
             Blog newBlog = new()
             {
-                User_Id = CreatedBlog.UserId,
+                User_Id = DefaultUser.Id,
                 Name = CreatedBlog.Name,
                 Description= CreatedBlog.Description,
-                StartDate = CreatedBlog.CreationTime
+                StartDate = DateTime.UtcNow
             };
 
             Blog createdBlog = _blogService.CreateBlog(newBlog);

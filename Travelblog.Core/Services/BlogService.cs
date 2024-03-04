@@ -11,6 +11,10 @@ namespace Travelblog.Core.Services
         }
         public Blog CreateBlog(Blog blog)
         {
+            if(blog.Description == null)
+            {
+                blog.Description = string.Empty;
+            }
             return _repository.Create(blog);
         }
 
