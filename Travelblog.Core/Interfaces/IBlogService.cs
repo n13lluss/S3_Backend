@@ -10,7 +10,6 @@ namespace Travelblog.Core.Interfaces
         public Blog GetBlogById(int id);
         public Blog LikeBlog(Blog blog, User user);
         public Blog UnLikeBlog(Blog blog, User user);
-        public Blog AddPost (Post post);
         public Blog AddFollower(Blog blog, User user);
         public Blog RemoveFollower(Blog blog, User user);
         public List<User> GetFollowers(int Id);

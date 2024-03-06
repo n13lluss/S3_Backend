@@ -1,7 +1,13 @@
-﻿namespace Travelblog.Dal.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Travelblog.Dal.Entities;
 
 public partial class BlogCountry
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
     public int BlogId { get; set; }
 
     public int CountryId { get; set; }

@@ -6,8 +6,11 @@ namespace Travelblog.Core.Services
     public class BlogService : IBlogService
     {
         private readonly IBlogRepository _repository;
-        public BlogService(IBlogRepository blogRepository) {
+        private readonly IBlogPostRepository _blogpostRepository;
+        public BlogService(IBlogRepository blogRepository, IBlogPostRepository postRepository)
+        {
             _repository = blogRepository;
+            _blogpostRepository = postRepository;
         }
         public Blog CreateBlog(Blog blog)
         {
@@ -26,7 +29,9 @@ namespace Travelblog.Core.Services
 
         public Blog GetBlogById(int id)
         {
-            return _repository.GetById(id);
+            var blog = _repository.GetById(id);
+            blog.Posts = _blogpostRepository.GetAllBlogPosts(id);
+            return blog;
         }
 
         public List<Blog> GetBlogList()

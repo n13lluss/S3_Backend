@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Travelblog.Dal.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Create : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -199,6 +199,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Reaction/Like",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Reaction_Id = table.Column<int>(type: "int", nullable: false),
                     User_Id = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime", nullable: false),
@@ -226,6 +228,7 @@ namespace Travelblog.Dal.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Creator_Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Start_Date = table.Column<DateTime>(type: "datetime", nullable: false),
                     Likes = table.Column<int>(type: "int", nullable: false),
                     Prive = table.Column<bool>(type: "bit", nullable: false),
@@ -255,6 +258,8 @@ namespace Travelblog.Dal.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Likes = table.Column<int>(type: "int", nullable: false),
                     Posted_On = table.Column<DateTime>(type: "datetime", nullable: false),
                     Prive = table.Column<bool>(type: "bit", nullable: false),
                     Suspended = table.Column<bool>(type: "bit", nullable: false),
@@ -275,6 +280,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Trip/Budget",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Trip_Id = table.Column<int>(type: "int", nullable: false),
                     Budget_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -296,6 +303,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Trip/Country",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Trip_Id = table.Column<int>(type: "int", nullable: false),
                     Country_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -317,6 +326,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Trip/Duration",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Trip_Id = table.Column<int>(type: "int", nullable: false),
                     Duration_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -338,6 +349,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Trip/Tag",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Trip_Id = table.Column<int>(type: "int", nullable: false),
                     Tag_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -359,6 +372,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Trip/Transport",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Trip_Id = table.Column<int>(type: "int", nullable: false),
                     Transport_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -380,6 +395,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Blog/Country",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Blog_Id = table.Column<int>(type: "int", nullable: false),
                     Country_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -401,6 +418,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Blog/Follower",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Follower_Id = table.Column<int>(type: "int", nullable: false),
                     Blog_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -422,6 +441,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Blog/Like",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Blog_Id = table.Column<int>(type: "int", nullable: false),
                     User_Id = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime", nullable: false),
@@ -445,6 +466,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Blog/Tag",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Blog_Id = table.Column<int>(type: "int", nullable: false),
                     Tag_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -463,14 +486,17 @@ namespace Travelblog.Dal.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Blog/Post",
+                name: "BlogPosts",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Blog_Id = table.Column<int>(type: "int", nullable: false),
                     Post_Id = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
+                    table.PrimaryKey("PK_BlogPosts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Blog/Post_Blog",
                         column: x => x.Blog_Id,
@@ -487,6 +513,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Post/Country",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Post_Id = table.Column<int>(type: "int", nullable: false),
                     Country_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -508,6 +536,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Post/Like",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Post_Id = table.Column<int>(type: "int", nullable: false),
                     User_Id = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime", nullable: false),
@@ -531,6 +561,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Post/Reaction",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Post_Id = table.Column<int>(type: "int", nullable: false),
                     Reaction_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -552,6 +584,8 @@ namespace Travelblog.Dal.Migrations
                 name: "Post/Tag",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Post_Id = table.Column<int>(type: "int", nullable: false),
                     Tag_Id = table.Column<int>(type: "int", nullable: false)
                 },
@@ -610,16 +644,6 @@ namespace Travelblog.Dal.Migrations
                 column: "User_Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Blog/Post_Blog_Id",
-                table: "Blog/Post",
-                column: "Blog_Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Blog/Post_Post_Id",
-                table: "Blog/Post",
-                column: "Post_Id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Blog/Tag_Blog_Id",
                 table: "Blog/Tag",
                 column: "Blog_Id");
@@ -628,6 +652,16 @@ namespace Travelblog.Dal.Migrations
                 name: "IX_Blog/Tag_Tag_Id",
                 table: "Blog/Tag",
                 column: "Tag_Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlogPosts_Blog_Id",
+                table: "BlogPosts",
+                column: "Blog_Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlogPosts_Post_Id",
+                table: "BlogPosts",
+                column: "Post_Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Post_Trip_Id",
@@ -773,10 +807,10 @@ namespace Travelblog.Dal.Migrations
                 name: "Blog/Like");
 
             migrationBuilder.DropTable(
-                name: "Blog/Post");
+                name: "Blog/Tag");
 
             migrationBuilder.DropTable(
-                name: "Blog/Tag");
+                name: "BlogPosts");
 
             migrationBuilder.DropTable(
                 name: "Post/Country");

@@ -164,8 +164,7 @@ public partial class TravelBlogDbContext : DbContext
         modelBuilder.Entity<BlogPost>(entity =>
         {
             entity
-                .HasNoKey()
-                .ToTable("Blog/Post");
+                .HasKey("Id");
 
             entity.Property(e => e.BlogId).HasColumnName("Blog_Id");
             entity.Property(e => e.PostId).HasColumnName("Post_Id");

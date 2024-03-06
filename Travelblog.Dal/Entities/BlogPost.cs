@@ -1,12 +1,20 @@
-﻿namespace Travelblog.Dal.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class BlogPost
+namespace Travelblog.Dal.Entities
 {
-    public int BlogId { get; set; }
+    public partial class BlogPost
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
-    public int PostId { get; set; }
+        public int BlogId { get; set; }
 
-    public virtual Blog Blog { get; set; } = null!;
+        public int PostId { get; set; }
 
-    public virtual Post Post { get; set; } = null!;
+        public virtual Blog Blog { get; set; } = null!;
+
+        public virtual Post Post { get; set; } = null!;
+    }
 }

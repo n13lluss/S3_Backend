@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod();
+                          policy.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app").AllowAnyHeader().AllowAnyMethod();
                       });
 });
 
@@ -22,6 +22,11 @@ builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+
+builder.Services.AddScoped<IBlogPostRepository, BlogPostRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers();

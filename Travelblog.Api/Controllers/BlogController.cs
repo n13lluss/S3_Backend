@@ -129,7 +129,14 @@ namespace Travelblog.Api.Controllers
             }
 
             Blog DeletedBlog = _blogService.GetBlogById(id);
-            DeletedBlog.IsDeleted = true;
+            if (DeletedBlog.IsDeleted)
+            {
+                DeletedBlog.IsDeleted = false;
+            }
+            else
+            {
+                DeletedBlog.IsDeleted = true;
+            }
             _blogService.UpdateBlog(DeletedBlog);
             return NoContent();
         }

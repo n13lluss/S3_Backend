@@ -12,8 +12,8 @@ using Travelblog.Dal;
 namespace Travelblog.Dal.Migrations
 {
     [DbContext(typeof(TravelBlogDbContext))]
-    [Migration("20240229210159_initial")]
-    partial class initial
+    [Migration("20240306132423_Create")]
+    partial class Create
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,10 @@ namespace Travelblog.Dal.Migrations
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Likes")
                         .HasColumnType("int");
@@ -81,6 +85,12 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Country_Id");
 
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.HasIndex("BlogId");
 
                     b.HasIndex("CountryId");
@@ -98,6 +108,12 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Follower_Id");
 
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.HasIndex("BlogId");
 
                     b.HasIndex("FollowerId");
@@ -113,6 +129,12 @@ namespace Travelblog.Dal.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
@@ -130,6 +152,12 @@ namespace Travelblog.Dal.Migrations
 
             modelBuilder.Entity("Travelblog.Dal.Entities.BlogPost", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("BlogId")
                         .HasColumnType("int")
                         .HasColumnName("Blog_Id");
@@ -138,11 +166,13 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Post_Id");
 
+                    b.HasKey("Id");
+
                     b.HasIndex("BlogId");
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Blog/Post", (string)null);
+                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("Travelblog.Dal.Entities.BlogTag", b =>
@@ -150,6 +180,12 @@ namespace Travelblog.Dal.Migrations
                     b.Property<int>("BlogId")
                         .HasColumnType("int")
                         .HasColumnName("Blog_Id");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("TagId")
                         .HasColumnType("int")
@@ -234,6 +270,13 @@ namespace Travelblog.Dal.Migrations
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -266,6 +309,12 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Country_Id");
 
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("PostId")
                         .HasColumnType("int")
                         .HasColumnName("Post_Id");
@@ -281,6 +330,12 @@ namespace Travelblog.Dal.Migrations
                 {
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("PostId")
                         .HasColumnType("int")
@@ -302,6 +357,12 @@ namespace Travelblog.Dal.Migrations
 
             modelBuilder.Entity("Travelblog.Dal.Entities.PostReaction", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("PostId")
                         .HasColumnType("int")
                         .HasColumnName("Post_Id");
@@ -319,6 +380,12 @@ namespace Travelblog.Dal.Migrations
 
             modelBuilder.Entity("Travelblog.Dal.Entities.PostTag", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("PostId")
                         .HasColumnType("int")
                         .HasColumnName("Post_Id");
@@ -397,6 +464,12 @@ namespace Travelblog.Dal.Migrations
                 {
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ReactionId")
                         .HasColumnType("int")
@@ -555,6 +628,12 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Budget_Id");
 
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("TripId")
                         .HasColumnType("int")
                         .HasColumnName("Trip_Id");
@@ -571,6 +650,12 @@ namespace Travelblog.Dal.Migrations
                     b.Property<int>("CountryId")
                         .HasColumnType("int")
                         .HasColumnName("Country_Id");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("TripId")
                         .HasColumnType("int")
@@ -589,6 +674,12 @@ namespace Travelblog.Dal.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Duration_Id");
 
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("TripId")
                         .HasColumnType("int")
                         .HasColumnName("Trip_Id");
@@ -602,6 +693,12 @@ namespace Travelblog.Dal.Migrations
 
             modelBuilder.Entity("Travelblog.Dal.Entities.TripTag", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("TagId")
                         .HasColumnType("int")
                         .HasColumnName("Tag_Id");
@@ -619,6 +716,12 @@ namespace Travelblog.Dal.Migrations
 
             modelBuilder.Entity("Travelblog.Dal.Entities.TripTransport", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("TransportId")
                         .HasColumnType("int")
                         .HasColumnName("Transport_Id");
