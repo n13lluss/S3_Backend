@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Travelblog.Api.Models.BlogDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
@@ -9,18 +10,20 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BlogController : ControllerBase
     {
         private IBlogService _blogService;
         private IUserService _userService;
         private IConfiguration _configuration;
-        public BlogController(IConfiguration configuration ,IBlogService blogservice, IUserService userService) {
+        public BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService) {
             _blogService = blogservice;
             _userService = userService;
             _configuration = configuration;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Get()
         {
             List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList()
@@ -41,6 +44,7 @@ namespace Travelblog.Api.Controllers
 
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public IActionResult Get(int id)
         {
             Blog blog = _blogService.GetBlogById(id);
@@ -94,6 +98,7 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public IActionResult Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
             Blog found = _blogService.GetBlogById(id);
@@ -121,6 +126,7 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult Delete(int id)
         {
             if (_blogService.GetBlogById(id) == null)

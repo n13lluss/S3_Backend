@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Travelblog.Api.Models.PostDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
@@ -9,6 +10,7 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class PostController : ControllerBase
     {
         private IBlogService _blogService;
