@@ -30,9 +30,10 @@ namespace Travelblog.Core.Services
         public Blog GetBlogById(int id)
         {
             var blog = _repository.GetById(id);
-            blog.Posts = _blogpostRepository.GetAllBlogPosts(id);
+            blog.Posts = _blogpostRepository.GetAllBlogPosts(id).OrderBy(post => post.Posted).ToList();
             return blog;
         }
+
 
         public List<Blog> GetBlogList()
         {
