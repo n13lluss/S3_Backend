@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Travelblog.Api.Models.UserDto;
 using Travelblog.Core.Interfaces;
-using Travelblog.Core.Services;
 
 namespace Travelblog.Api.Controllers
 {

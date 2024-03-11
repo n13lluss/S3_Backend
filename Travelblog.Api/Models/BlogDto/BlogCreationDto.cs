@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace Travelblog.Api.Models.BlogDto
+﻿namespace Travelblog.Api.Models.BlogDto
 {
     public class BlogCreationDto
     {

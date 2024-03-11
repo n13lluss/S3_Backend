@@ -14,30 +14,82 @@ namespace Travelblog.Core.Services
         }
         public Blog CreateBlog(Blog blog)
         {
-            if(blog.Description == null)
+            if (blog == null)
             {
-                blog.Description = string.Empty;
+                throw new ArgumentNullException(nameof(blog));
             }
-            return _repository.Create(blog);
+
+            if (string.IsNullOrEmpty(blog.Name))
+            {
+                throw new ArgumentException("Blog title cannot be empty", nameof(blog.Name));
+            }
+
+            try
+            {
+                return _repository.Create(blog);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error creating blog", ex);
+            }
         }
 
         public Blog UpdateBlog(Blog blog)
         {
-            Blog UpdatedBlog = _repository.Update(blog);
-            return UpdatedBlog;
+            if (blog == null)
+            {
+                throw new ArgumentNullException(nameof(blog));
+            }
+
+            if (string.IsNullOrEmpty(blog.Name))
+            {
+                throw new ArgumentException("Blog title cannot be empty", nameof(blog.Name));
+            }
+
+            try
+            {
+                Blog updatedBlog = _repository.Update(blog);
+                return updatedBlog;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error updating blog", ex);
+            }
         }
 
         public Blog GetBlogById(int id)
         {
-            var blog = _repository.GetById(id);
-            blog.Posts = _blogpostRepository.GetAllBlogPosts(id).OrderBy(post => post.Posted).ToList();
-            return blog;
+            if(id < 0)
+            {
+                throw new Exception("Invalid id");
+            }
+            try
+            {
+                var blog = _repository.GetById(id);
+                if(blog == null)
+                {
+                    throw new Exception("Not found");
+                }
+                blog.Posts = _blogpostRepository.GetAllBlogPosts(id).OrderBy(post => post.Posted).ToList();
+                return blog;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception("Unable to get Blog", ex);
+            }
+            
         }
 
 
         public List<Blog> GetBlogList()
         {
-            return _repository.GetAll();
+            
+            var blogs = _repository.GetAll();
+            if(blogs == null || blogs.Count == 0)
+            {
+                throw new Exception("Error in getting data");
+            }
+            return blogs;
         }
 
         public Blog AddCountry(Country country)

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Travelblog.Core.Models;
+﻿using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Interfaces
 {

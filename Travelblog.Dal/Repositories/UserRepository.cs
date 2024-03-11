@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Travelblog.Core.Interfaces;
+﻿using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Dal.Repositories

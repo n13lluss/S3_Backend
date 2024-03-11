@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Travelblog.Api", "Travelblog.Api\Travelblog.Api.csproj", "{67869C66-D085-43AA-901D-D4B50D2E7BB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Api", "Travelblog.Api\Travelblog.Api.csproj", "{67869C66-D085-43AA-901D-D4B50D2E7BB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Travelblog.Core", "Travelblog.Core\Travelblog.Core.csproj", "{A67D0A79-B1E9-428E-A50A-66D79BAC5D7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Core", "Travelblog.Core\Travelblog.Core.csproj", "{A67D0A79-B1E9-428E-A50A-66D79BAC5D7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Travelblog.Dal", "Travelblog.Dal\Travelblog.Dal.csproj", "{22016881-57E4-4C1E-B5F7-C685F26C96AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Dal", "Travelblog.Dal\Travelblog.Dal.csproj", "{22016881-57E4-4C1E-B5F7-C685F26C96AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Travelblog.Unittest", "Travelblog.Unittest\Travelblog.Unittest.csproj", "{7A7A774D-D86C-4117-94E4-F5A6C32906F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{22016881-57E4-4C1E-B5F7-C685F26C96AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22016881-57E4-4C1E-B5F7-C685F26C96AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22016881-57E4-4C1E-B5F7-C685F26C96AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A7A774D-D86C-4117-94E4-F5A6C32906F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A7A774D-D86C-4117-94E4-F5A6C32906F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A7A774D-D86C-4117-94E4-F5A6C32906F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A7A774D-D86C-4117-94E4-F5A6C32906F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

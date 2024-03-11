@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Travelblog.Core.Interfaces;
+﻿using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
@@ -20,9 +15,27 @@ namespace Travelblog.Core.Services
         }
         public Post CreatePost(Post post, int BlogId)
         {
-            Post created = _postRepository.CreatePost(post);
-            _blogPostRepository.CreateBlogPost(created.Id, BlogId);
-            return created;
+            if (post == null)
+            {
+                throw new ArgumentException("Invalid post");
+            }
+
+            try
+            {
+                Post created = _postRepository.CreatePost(post);
+
+                if (created == null)
+                {
+                    throw new Exception("Error creating post");
+                }
+
+                _blogPostRepository.CreateBlogPost(created.Id, BlogId);
+                return created;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to create post", ex);
+            }
         }
 
         public Post DeletePost(Post post)

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
-using Travelblog.Core.Services;
 
 namespace Travelblog.Dal.Repositories
 {
