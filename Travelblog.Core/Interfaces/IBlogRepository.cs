@@ -4,9 +4,9 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IBlogRepository
     {
-        List<Blog> GetAll();
+        Task<List<Blog>> GetAll();
         Blog Create(Blog blog);
-        Blog Update(Blog blog);
-        Blog GetById(int id);
+        Task<Blog> Update(Blog blog);
+        Task<Blog> GetById(int id);
     }
 }

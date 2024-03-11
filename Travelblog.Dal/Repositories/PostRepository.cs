@@ -1,61 +1,76 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
+using Travelblog.Dal.Entities;
 
 namespace Travelblog.Dal.Repositories
 {
     public class PostRepository : IPostRepository
     {
         private readonly TravelBlogDbContext _dbContext;
+        private readonly IBlogPostRepository _blogPostRepository;
 
-        public PostRepository(TravelBlogDbContext dbContext)
+        public PostRepository(TravelBlogDbContext dbContext, IBlogPostRepository blogPostRepository)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
         }
 
-        public List<Post> GetAllPostsByBlogId(int id)
+        public async Task<List<Core.Models.Post>> GetAllPostsByBlogIdAsync(int id)
         {
-            var collected = _dbContext.Posts.Where(p => p.TripId == id).ToList();
+            var collected = await _dbContext.Posts.Where(p => p.TripId == id).ToListAsync();
             return collected.Select(p => MapEntityToCoreModel(p)).ToList();
         }
 
-        public Post GetPostByID(int id)
+        public async Task<Core.Models.Post> GetPostByIDAsync(int id)
         {
-            var collected = _dbContext.Posts.Find(id);
+            var collected = await _dbContext.Posts.FindAsync(id);
             return MapEntityToCoreModel(collected);
         }
 
-        public Post CreatePost(Post post)
+        public async Task<Core.Models.Post> CreatePostAsync(Core.Models.Post post, int blogid)
         {
-            var postEntity = new Entities.Post
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
-                Name = post.Name,
-                Description = post.Description,
-                Likes = post.Likes,
-                Prive = post.IsPrive,
-                Suspended = post.IsSuspended,
-                Deleted = post.IsDeleted,
-                PostedOn = post.Posted,
-                TripId = 3
-            };
+                try
+                {
+                    var postEntity = new Entities.Post
+                    {
+                        Name = post.Name,
+                        Description = post.Description,
+                        Likes = post.Likes,
+                        Prive = post.IsPrive,
+                        Suspended = post.IsSuspended,
+                        Deleted = post.IsDeleted,
+                        PostedOn = post.Posted,
+                        TripId = 3
+                    };
 
-            _dbContext.Posts.Add(postEntity);
+                    await _dbContext.Posts.AddAsync(postEntity);
+                    await _dbContext.SaveChangesAsync();
 
-            try
-            {
-                _dbContext.SaveChanges();
-                return MapEntityToCoreModel(postEntity);
-            }
-            catch (DbUpdateException ex)
-            {
-                // Handle the exception (log, rethrow, or return null)
-                return null;
+                    await _blogPostRepository.CreateBlogPostAsync(postEntity.Id, blogid);
+
+                    await transaction.CommitAsync();
+
+                    return MapEntityToCoreModel(postEntity);
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Handle the exception (log, rethrow, or return null)
+                    await transaction.RollbackAsync();
+                    return null;
+                }
             }
         }
 
-        public Post UpdatePost(Post post)
+        public async Task<Core.Models.Post> UpdatePostAsync(Core.Models.Post post)
         {
-            var existingPostEntity = _dbContext.Posts.FirstOrDefault(p => p.Id == post.Id);
+            var existingPostEntity = await _dbContext.Posts.FirstOrDefaultAsync(p => p.Id == post.Id);
 
             if (existingPostEntity != null)
             {
@@ -70,7 +85,7 @@ namespace Travelblog.Dal.Repositories
 
                 try
                 {
-                    _dbContext.SaveChanges();
+                    await _dbContext.SaveChangesAsync();
                     return MapEntityToCoreModel(existingPostEntity);
                 }
                 catch (DbUpdateException ex)
@@ -83,21 +98,39 @@ namespace Travelblog.Dal.Repositories
             return null;
         }
 
-        public Post DeletePost(int id)
+        public async Task<Core.Models.Post> DeletePostAsync(int id)
         {
-            var post = _dbContext.Posts.Find(id);
-            if (post != null)
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
             {
-                _dbContext.Posts.Remove(post);
-                _dbContext.SaveChanges();
+                try
+                {
+                    var post = await _dbContext.Posts.FindAsync(id);
+                    if (post != null)
+                    {
+                        _dbContext.Posts.Remove(post);
+                        await _dbContext.SaveChangesAsync();
+
+                        // Now delete the associated blog post
+                        await _blogPostRepository.DeleteBlogPostAsync(id);
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return MapEntityToCoreModel(post);
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Handle the exception (log, rethrow, or return null)
+                    await transaction.RollbackAsync();
+                    return null;
+                }
             }
-            return MapEntityToCoreModel(post);
         }
 
-        private static Post MapEntityToCoreModel(Entities.Post entity)
+        private static Core.Models.Post MapEntityToCoreModel(Entities.Post entity)
         {
             return entity != null
-                ? new Post
+                ? new Core.Models.Post
                 {
                     Id = entity.Id,
                     Name = entity.Name,
@@ -109,7 +142,7 @@ namespace Travelblog.Dal.Repositories
                     Posted = entity.PostedOn,
                     TripId = entity.TripId
                 }
-                : new Post();
+                : new Core.Models.Post();
         }
     }
 }

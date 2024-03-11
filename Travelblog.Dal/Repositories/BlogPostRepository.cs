@@ -1,4 +1,9 @@
-﻿using Travelblog.Core.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Travelblog.Core.Interfaces;
 using Travelblog.Dal.Entities;
 
 namespace Travelblog.Dal.Repositories
@@ -11,7 +16,8 @@ namespace Travelblog.Dal.Repositories
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
-        public void CreateBlogPost(int postId, int blogId)
+
+        public async Task CreateBlogPostAsync(int postId, int blogId)
         {
             BlogPost blogPost = new()
             {
@@ -19,17 +25,16 @@ namespace Travelblog.Dal.Repositories
                 BlogId = blogId
             };
             _dbContext.BlogPosts.Add(blogPost);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
 
-        public List<Core.Models.Post> GetAllBlogPosts(int BlogId)
+        public async Task<List<Core.Models.Post>> GetAllBlogPostsAsync(int BlogId)
         {
-            var blogs = _dbContext.Blogs
-                            .Where(blog => blog.Id == BlogId)
-                            .Join(_dbContext.BlogPosts, blog => blog.Id, blogPost => blogPost.BlogId, (blog, blogPost) => blogPost)
-                            .Join(_dbContext.Posts, blogPost => blogPost.PostId, post => post.Id, (blogPost, post) => post)
-                            .ToList();
-
+            var blogs = await _dbContext.Blogs
+                .Where(blog => blog.Id == BlogId)
+                .Join(_dbContext.BlogPosts, blog => blog.Id, blogPost => blogPost.BlogId, (blog, blogPost) => blogPost)
+                .Join(_dbContext.Posts, blogPost => blogPost.PostId, post => post.Id, (blogPost, post) => post)
+                .ToListAsync();
 
             return blogs.Select(blog => MapToPost(blog)).ToList();
         }
@@ -52,5 +57,15 @@ namespace Travelblog.Dal.Repositories
                 : new Core.Models.Post();
         }
 
+        public async Task DeleteBlogPostAsync(int postId)
+        {
+            var blogPost = await _dbContext.BlogPosts.FirstOrDefaultAsync(bp => bp.PostId == postId);
+
+            if (blogPost != null)
+            {
+                _dbContext.BlogPosts.Remove(blogPost);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

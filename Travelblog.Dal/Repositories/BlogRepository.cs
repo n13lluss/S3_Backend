@@ -1,30 +1,30 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
+using Travelblog.Dal.Entities;
+using Blog = Travelblog.Core.Models.Blog;
 
 namespace Travelblog.Dal.Repositories
 {
     public class BlogRepository : IBlogRepository
     {
         private readonly TravelBlogDbContext _dbContext;
+        private readonly IPostRepository _postRepository;
+        private readonly IBlogPostRepository _blogPostRepository;
 
-        public BlogRepository(TravelBlogDbContext dbContext)
+        public BlogRepository(TravelBlogDbContext dbContext, IPostRepository postrepository, IBlogPostRepository blogPostRepository)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _postRepository = postrepository;
+            _blogPostRepository = blogPostRepository;
         }
 
-        public List<Blog> GetAll()
+        public async Task<List<Blog>> GetAll()
         {
-            var blogs = _dbContext.Blogs.ToList();
+            var blogs = await _dbContext.Blogs.ToListAsync();
             List<Blog> result = blogs.Select(blog => MapEntityToCoreModel(blog)).ToList();
             return result;
-        }
-
-        public async Task<List<Blog>> GetAllAsync()
-        {
-            return await _dbContext.Blogs
-                .Select(blogEntity => MapEntityToCoreModel(blogEntity))
-                .ToListAsync();
         }
 
         public Blog Create(Blog blog)
@@ -55,41 +55,81 @@ namespace Travelblog.Dal.Repositories
             }
         }
 
-        public Blog Update(Blog blog)
+        public async Task<Blog> Update(Blog blog)
         {
-            var existingBlogEntity = _dbContext.Blogs.FirstOrDefault(b => b.Id == blog.Id);
-
-            if (existingBlogEntity != null)
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
-                existingBlogEntity.Name = blog.Name;
-                existingBlogEntity.StartDate = blog.StartDate;
-                existingBlogEntity.Likes = blog.Likes;
-                existingBlogEntity.Prive = blog.IsPrive;
-                existingBlogEntity.Suspended = blog.IsSuspended;
-                existingBlogEntity.Deleted = blog.IsDeleted;
-                existingBlogEntity.Description = blog.Description;
-                existingBlogEntity.TripId = null;
-
                 try
                 {
-                    _dbContext.SaveChanges();
-                    return MapEntityToCoreModel(existingBlogEntity);
+                    var existingBlogEntity = _dbContext.Blogs.FirstOrDefault(b => b.Id == blog.Id);
+
+                    if (existingBlogEntity != null)
+                    {
+                        existingBlogEntity.Name = blog.Name;
+                        existingBlogEntity.StartDate = blog.StartDate;
+                        existingBlogEntity.Likes = blog.Likes;
+                        existingBlogEntity.Prive = blog.IsPrive;
+                        existingBlogEntity.Suspended = blog.IsSuspended;
+                        existingBlogEntity.Deleted = blog.IsDeleted;
+                        existingBlogEntity.Description = blog.Description;
+                        existingBlogEntity.TripId = null;
+
+                        if (blog.IsDeleted == true)
+                        {
+                            try
+                            {
+                                foreach (Core.Models.Post post in blog.Posts)
+                                {
+                                    post.IsDeleted = true;
+                                    _postRepository.UpdatePostAsync(post);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Handle the exception (log, rethrow, or return null)
+                                transaction.Rollback();
+                                return null;
+                            }
+                        }
+
+                        _dbContext.SaveChanges();
+                        transaction.Commit();
+
+                        return MapEntityToCoreModel(existingBlogEntity);
+                    }
+                    transaction.Rollback();
+                    return null;
                 }
                 catch (DbUpdateException ex)
                 {
-                    // Handle the exception (log, rethrow, or return null)
+                    transaction.Rollback();
                     return null;
                 }
             }
-
-            return null;
         }
 
-        public Blog GetById(int id)
+        public async Task<Blog> GetById(int id)
         {
-            var blogEntity = _dbContext.Blogs.FirstOrDefault(blog => blog.Id == id);
-            return MapEntityToCoreModel(blogEntity);
+            using (var transaction = _dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    var blogEntity = _dbContext.Blogs.FirstOrDefault(blog => blog.Id == id);
+                    Blog found = MapEntityToCoreModel(blogEntity);
+                    found.Posts = await _blogPostRepository.GetAllBlogPostsAsync(id);
+                    found.Posts = found.Posts.OrderBy(post => post.Posted).ToList();
+                    await transaction.CommitAsync();
+                    return found;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new Exception("Unable to get Blog", ex);
+                }
+            }
         }
+
+
 
         private static Blog MapEntityToCoreModel(Entities.Blog entity)
         {

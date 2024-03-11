@@ -4,7 +4,8 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IBlogPostRepository
     {
-        void CreateBlogPost(int postId, int blogId);
-        List<Post> GetAllBlogPosts(int BlogId);
+        Task CreateBlogPostAsync(int postId, int blogId);
+        Task<List<Post>> GetAllBlogPostsAsync(int BlogId);
+        Task DeleteBlogPostAsync(int postId);
     }
 }

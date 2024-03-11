@@ -4,8 +4,9 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IPostService
     {
-        Post CreatePost(Post post, int BlogId);
-        Post UpdatePost(Post post);
-        Post DeletePost(Post post);
+        Task<Post> CreatePostAsync(Post post, int BlogId);
+        Task<Post> UpdatePostAsync(Post post);
+        Task<Post> DeletePostAsync(Post post);
+        Task<Post> GetPostByIdAsync(int id);
     }
 }

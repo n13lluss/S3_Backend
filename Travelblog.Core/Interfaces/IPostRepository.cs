@@ -1,13 +1,15 @@
-﻿using Travelblog.Core.Models;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Interfaces
 {
     public interface IPostRepository
     {
-        Post GetPostByID(int id);
-        List<Post> GetAllPostsByBlogId(int id);
-        Post CreatePost(Post post);
-        Post UpdatePost(Post post);
-        Post DeletePost(int id);
+        Task<Post> GetPostByIDAsync(int id);
+        Task<List<Post>> GetAllPostsByBlogIdAsync(int id);
+        Task<Post> CreatePostAsync(Post post, int blogid);
+        Task<Post> UpdatePostAsync(Post post);
+        Task<Post> DeletePostAsync(int id);
     }
 }

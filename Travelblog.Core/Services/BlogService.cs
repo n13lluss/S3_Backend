@@ -12,7 +12,7 @@ namespace Travelblog.Core.Services
             _repository = blogRepository;
             _blogpostRepository = postRepository;
         }
-        public Blog CreateBlog(Blog blog)
+        public async Task<Blog> CreateBlog(Blog blog)
         {
             if (blog == null)
             {
@@ -34,7 +34,7 @@ namespace Travelblog.Core.Services
             }
         }
 
-        public Blog UpdateBlog(Blog blog)
+        public async Task<Blog> UpdateBlog(Blog blog)
         {
             if (blog == null)
             {
@@ -48,7 +48,7 @@ namespace Travelblog.Core.Services
 
             try
             {
-                Blog updatedBlog = _repository.Update(blog);
+                Blog updatedBlog = await _repository.Update(blog);
                 return updatedBlog;
             }
             catch (Exception ex)
@@ -57,40 +57,38 @@ namespace Travelblog.Core.Services
             }
         }
 
-        public Blog GetBlogById(int id)
+        public async Task<Blog> GetBlogById(int id)
         {
-            if(id < 0)
+            if (id < 0)
             {
                 throw new Exception("Invalid id");
             }
+
             try
             {
-                var blog = _repository.GetById(id);
-                if(blog == null)
+                var blog = await _repository.GetById(id);
+                if (blog == null)
                 {
-                    throw new Exception("Not found");
+                    throw new Exception($"Blog with ID {id} not found");
                 }
-                blog.Posts = _blogpostRepository.GetAllBlogPosts(id).OrderBy(post => post.Posted).ToList();
                 return blog;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception("Unable to get Blog", ex);
             }
-            
         }
 
-
-        public List<Blog> GetBlogList()
+        public async Task<List<Blog>> GetBlogList()
         {
-            
-            var blogs = _repository.GetAll();
-            if(blogs == null || blogs.Count == 0)
+            var blogs = await _repository.GetAll();
+            if (blogs == null || blogs.Count == 0)
             {
                 throw new Exception("Error in getting data");
             }
             return blogs;
         }
+
 
         public Blog AddCountry(Country country)
         {

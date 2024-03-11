@@ -6,14 +6,13 @@ namespace Travelblog.Core.Services
     public class PostService : IPostService
     {
         private readonly IPostRepository _postRepository;
-        private readonly IBlogService _blogService;
         private readonly IBlogPostRepository _blogPostRepository;
-        public PostService(IPostRepository postRepository, IBlogService blogService, IBlogPostRepository blogPostRepository) {
+        public PostService(IPostRepository postRepository, IBlogPostRepository blogPostRepository) {
             _postRepository = postRepository;
-            _blogService = blogService;
+
             _blogPostRepository = blogPostRepository;
         }
-        public Post CreatePost(Post post, int BlogId)
+        public async Task<Post> CreatePostAsync(Post post, int blogId)
         {
             if (post == null)
             {
@@ -22,15 +21,13 @@ namespace Travelblog.Core.Services
 
             try
             {
-                Post created = _postRepository.CreatePost(post);
+                Post createdPost = await _postRepository.CreatePostAsync(post, blogId);
 
-                if (created == null)
+                if (createdPost == null)
                 {
                     throw new Exception("Error creating post");
                 }
-
-                _blogPostRepository.CreateBlogPost(created.Id, BlogId);
-                return created;
+                return createdPost;
             }
             catch (Exception ex)
             {
@@ -38,14 +35,44 @@ namespace Travelblog.Core.Services
             }
         }
 
-        public Post DeletePost(Post post)
+        public async Task<Post> DeletePostAsync(Post post)
+        {
+            if (post == null)
+            {
+                throw new ArgumentException("Invalid post");
+            }
+
+            try
+            {
+                await _blogPostRepository.DeleteBlogPostAsync(post.Id);
+                return await _postRepository.DeletePostAsync(post.Id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to delete post", ex);
+            }
+        }
+
+        public Task<Post> GetPostByIdAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Post UpdatePost(Post post)
+        public async Task<Post> UpdatePostAsync(Post post)
         {
-            throw new NotImplementedException();
+            if (post == null)
+            {
+                throw new ArgumentException("Invalid post");
+            }
+
+            try
+            {
+                return await _postRepository.UpdatePostAsync(post);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to update post", ex);
+            }
         }
     }
 }

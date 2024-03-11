@@ -4,10 +4,10 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IBlogService
     {
-        public Blog CreateBlog(Blog blog);
-        public Blog UpdateBlog(Blog blog);
-        public List<Blog> GetBlogList();
-        public Blog GetBlogById(int id);
+        public Task<Blog> CreateBlog(Blog blog);
+        public Task<Blog> UpdateBlog(Blog blog);
+        public Task<List<Blog>> GetBlogList();
+        public Task<Blog> GetBlogById(int id);
         public Blog LikeBlog(Blog blog, User user);
         public Blog UnLikeBlog(Blog blog, User user);
         public Blog AddFollower(Blog blog, User user);

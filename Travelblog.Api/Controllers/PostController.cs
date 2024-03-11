@@ -11,15 +11,9 @@ namespace Travelblog.Api.Controllers
     [Authorize]
     public class PostController : ControllerBase
     {
-        private IBlogService _blogService;
-        private IUserService _userService;
-        private IConfiguration _configuration;
         private IPostService _postService;
-        public PostController(IConfiguration configuration, IBlogService blogservice, IUserService userService, IPostService postService)
+        public PostController(IPostService postService)
         {
-            _blogService = blogservice;
-            _userService = userService;
-            _configuration = configuration;
             _postService = postService;
         }
         // POST api/<PostController>
@@ -34,14 +28,40 @@ namespace Travelblog.Api.Controllers
                 Description = post.Description,
                 Posted = DateTime.Now,
             };
-            _postService.CreatePost(newpost, blogId);   
+            _postService.CreatePostAsync(newpost, blogId);   
         }
 
         // PUT api/<PostController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(int id, [FromBody] PostUpdateDto value)
         {
+            if (id <= 0 || value == null)
+            {
+                return BadRequest("Invalid input");
+            }
+
+            Post existingPost = await _postService.GetPostByIdAsync(id);
+
+            if (existingPost == null)
+            {
+                return NotFound();
+            }
+
+            existingPost.Name = value.Name;
+            existingPost.Description = value.Description;
+            existingPost.Posted = DateTime.Now;
+
+            var updatedPost = await _postService.UpdatePostAsync(existingPost);
+
+            if (updatedPost == null)
+            {
+                return StatusCode(500, "Internal server error"); // Adjust the status code and message as needed
+            }
+
+            return Ok(updatedPost);
         }
+
+
 
         // DELETE api/<PostController>/5
         [HttpDelete("{id}")]

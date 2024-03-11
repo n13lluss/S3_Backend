@@ -13,13 +13,12 @@ namespace Travelblog.Unittest
     public class PostTests
     {
         [Fact]
-        public void CreatePost_ValidPost_ReturnsCreatedPost()
+        public async Task CreatePost_ValidPost_ReturnsCreatedPost()
         {
             // Arrange
             var postRepositoryMock = new Mock<IPostRepository>();
-            var blogServiceMock = new Mock<IBlogService>();
             var blogPostRepositoryMock = new Mock<IBlogPostRepository>();
-            var postService = new PostService(postRepositoryMock.Object, blogServiceMock.Object, blogPostRepositoryMock.Object);
+            var postService = new PostService(postRepositoryMock.Object, blogPostRepositoryMock.Object);
 
             var blogId = 1;
             var inputPost = new Post
@@ -28,13 +27,13 @@ namespace Travelblog.Unittest
                 Description = "Test Content"
             };
 
-            postRepositoryMock.Setup(repo => repo.CreatePost(It.IsAny<Post>()))
-                             .Returns((Post createdPost) => createdPost);
+            postRepositoryMock.Setup(repo => repo.CreatePostAsync(It.IsAny<Post>(), It.IsAny<int>()))
+                             .ReturnsAsync((Post createdPost, int id) => createdPost);
 
-            blogPostRepositoryMock.Setup(repo => repo.CreateBlogPost(It.IsAny<int>(), It.IsAny<int>()));
+            blogPostRepositoryMock.Setup(repo => repo.CreateBlogPostAsync(It.IsAny<int>(), It.IsAny<int>()));
 
             // Act
-            var result = postService.CreatePost(inputPost, blogId);
+            var result = await postService.CreatePostAsync(inputPost, blogId);
 
             // Assert
             Assert.NotNull(result);
@@ -42,14 +41,16 @@ namespace Travelblog.Unittest
             Assert.Equal(inputPost.Description, result.Description);
         }
 
+
+
+
         [Fact]
         public void CreatePost_InvalidPost_ThrowsException()
         {
             // Arrange
             var postRepositoryMock = new Mock<IPostRepository>();
-            var blogServiceMock = new Mock<IBlogService>();
             var blogPostRepositoryMock = new Mock<IBlogPostRepository>();
-            var postService = new PostService(postRepositoryMock.Object, blogServiceMock.Object, blogPostRepositoryMock.Object);
+            var postService = new PostService(postRepositoryMock.Object, blogPostRepositoryMock.Object);
 
             var blogId = 1;
             var invalidPost = new Post
@@ -58,7 +59,7 @@ namespace Travelblog.Unittest
             };
 
             // Act and Assert
-            Assert.Throws<Exception>(() => postService.CreatePost(invalidPost, blogId));
+            Assert.ThrowsAsync<Exception>(() => postService.CreatePostAsync(invalidPost, blogId));
         }
     }
 }

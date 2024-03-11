@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Travelblog.Api.Models.BlogDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Travelblog.Api.Controllers
 {
@@ -13,10 +15,12 @@ namespace Travelblog.Api.Controllers
     [Authorize]
     public class BlogController : ControllerBase
     {
-        private IBlogService _blogService;
-        private IUserService _userService;
-        private IConfiguration _configuration;
-        public BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService) {
+        private readonly IBlogService _blogService;
+        private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
+
+        public BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService)
+        {
             _blogService = blogservice;
             _userService = userService;
             _configuration = configuration;
@@ -24,9 +28,9 @@ namespace Travelblog.Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList()
+            List<BlogSlimDTO> smallBlogs = (await _blogService.GetBlogList())
                 .Where(blog => !blog.IsDeleted)
                 .Select(blog => new BlogSlimDTO
                 {
@@ -42,12 +46,17 @@ namespace Travelblog.Api.Controllers
             return Ok(smallBlogs);
         }
 
-
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            Blog blog = _blogService.GetBlogById(id);
+            Blog blog = await _blogService.GetBlogById(id);
+
+            if (blog == null)
+            {
+                return NotFound();
+            }
+
             BlogViewDto blogViewDto = new BlogViewDto()
             {
                 Id = blog.Id,
@@ -62,46 +71,41 @@ namespace Travelblog.Api.Controllers
                 IsPrive = blog.IsPrive,
                 IsSuspended = blog.IsSuspended,
                 Countries = blog.Countries,
-
             };
-            if (blog == null)
-            {
-                return NotFound();
-            }
 
             return Ok(blogViewDto);
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
+        public async Task<IActionResult> Create([FromBody] BlogCreationDto CreatedBlog)
         {
-            //Adding default user information 
-            User DefaultUser = new User();
-            _configuration.GetSection("DefaultUser").Bind(DefaultUser);
-            //
-
             if (CreatedBlog == null)
             {
                 return BadRequest("Invalid input");
             }
 
+            // Adding default user information
+            User DefaultUser = new User();
+            _configuration.GetSection("DefaultUser").Bind(DefaultUser);
+            //
+
             Blog newBlog = new()
             {
                 User_Id = DefaultUser.Id,
                 Name = CreatedBlog.Name,
-                Description= CreatedBlog.Description,
+                Description = CreatedBlog.Description,
                 StartDate = DateTime.UtcNow
             };
 
-            Blog createdBlog = _blogService.CreateBlog(newBlog);
+            Blog createdBlog = await _blogService.CreateBlog(newBlog);
             return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
         }
 
         [HttpPut("{id}")]
         [Authorize]
-        public IActionResult Put(int id, [FromBody] UpdateBlogDto updatedBlog)
+        public async Task<IActionResult> Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
-            Blog found = _blogService.GetBlogById(id);
+            Blog found = await _blogService.GetBlogById(id);
 
             if (found == null)
             {
@@ -120,30 +124,31 @@ namespace Travelblog.Api.Controllers
             found.IsPrive = updatedBlog.IsPrive;
             found.Trip_Id = updatedBlog.Trip_Id;
 
-
-            _blogService.UpdateBlog(found);
+            await _blogService.UpdateBlog(found);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [Authorize]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (_blogService.GetBlogById(id) == null)
+            Blog existingBlog = await _blogService.GetBlogById(id);
+
+            if (existingBlog == null)
             {
                 return NotFound();
             }
 
-            Blog DeletedBlog = _blogService.GetBlogById(id);
-            if (DeletedBlog.IsDeleted)
+            if (existingBlog.IsDeleted)
             {
-                DeletedBlog.IsDeleted = false;
+                existingBlog.IsDeleted = false;
             }
             else
             {
-                DeletedBlog.IsDeleted = true;
+                existingBlog.IsDeleted = true;
             }
-            _blogService.UpdateBlog(DeletedBlog);
+
+            await _blogService.UpdateBlog(existingBlog);
             return NoContent();
         }
     }
