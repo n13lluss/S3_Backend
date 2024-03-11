@@ -3,17 +3,14 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class UserService : IUserService
+    public class UserService(IUserRepository userRepository) : IUserService
     {
-        private readonly IUserRepository _userRepository;
-        public UserService(IUserRepository userRepository) {
-            _userRepository = userRepository;
-        }
+        private readonly IUserRepository _userRepository = userRepository;
 
         public bool CheckUser(string UsernameEmail, string Password)
         {
             User FoundUser;
-            if(UsernameEmail.Contains("@"))
+            if (UsernameEmail.Contains('@'))
             {
                 FoundUser = _userRepository.GetByEmail(UsernameEmail);
             }
@@ -22,11 +19,11 @@ namespace Travelblog.Core.Services
                 FoundUser = _userRepository.GetByUserName(UsernameEmail);
             }
 
-            if(FoundUser == null || FoundUser.Password != Password)
+            if (FoundUser == null || FoundUser.Password != Password)
             {
                 return false;
             }
-            
+
             return true;
         }
 
@@ -38,7 +35,7 @@ namespace Travelblog.Core.Services
         public string GetNameById(int UserId)
         {
             User user = GetById(UserId);
-            return user.UserName;
+            return user == null ? throw new Exception("User not found") : user.UserName;
         }
     }
 }

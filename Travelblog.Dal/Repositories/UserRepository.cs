@@ -3,14 +3,9 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Dal.Repositories
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository(TravelBlogDbContext dbContext) : IUserRepository
     {
-        private readonly TravelBlogDbContext _dbContext;
-
-        public UserRepository(TravelBlogDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly TravelBlogDbContext _dbContext = dbContext;
 
         public User GetByEmail(string email)
         {

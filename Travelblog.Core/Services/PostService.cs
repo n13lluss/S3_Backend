@@ -3,15 +3,11 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class PostService : IPostService
+    public class PostService(IPostRepository postRepository, IBlogPostRepository blogPostRepository) : IPostService
     {
-        private readonly IPostRepository _postRepository;
-        private readonly IBlogPostRepository _blogPostRepository;
-        public PostService(IPostRepository postRepository, IBlogPostRepository blogPostRepository) {
-            _postRepository = postRepository;
+        private readonly IPostRepository _postRepository = postRepository;
+        private readonly IBlogPostRepository _blogPostRepository = blogPostRepository;
 
-            _blogPostRepository = blogPostRepository;
-        }
         public async Task<Post> CreatePostAsync(Post post, int blogId)
         {
             if (post == null)
@@ -23,11 +19,7 @@ namespace Travelblog.Core.Services
             {
                 Post createdPost = await _postRepository.CreatePostAsync(post, blogId);
 
-                if (createdPost == null)
-                {
-                    throw new Exception("Error creating post");
-                }
-                return createdPost;
+                return createdPost ?? throw new Exception("Error creating post");
             }
             catch (Exception ex)
             {

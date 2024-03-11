@@ -13,18 +13,11 @@ namespace Travelblog.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class BlogController : ControllerBase
+    public class BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService) : ControllerBase
     {
-        private readonly IBlogService _blogService;
-        private readonly IUserService _userService;
-        private readonly IConfiguration _configuration;
-
-        public BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService)
-        {
-            _blogService = blogservice;
-            _userService = userService;
-            _configuration = configuration;
-        }
+        private readonly IBlogService _blogService = blogservice;
+        private readonly IUserService _userService = userService;
+        private readonly IConfiguration _configuration = configuration;
 
         [HttpGet]
         [AllowAnonymous]
@@ -57,7 +50,7 @@ namespace Travelblog.Api.Controllers
                 return NotFound();
             }
 
-            BlogViewDto blogViewDto = new BlogViewDto()
+            BlogViewDto blogViewDto = new()
             {
                 Id = blog.Id,
                 User_Name = _userService.GetNameById(blog.User_Id),
@@ -66,7 +59,7 @@ namespace Travelblog.Api.Controllers
                 StartDate = blog.StartDate,
                 Likes = blog.Likes,
                 Posts = blog.Posts,
-                Followers = blog.Followers.Count(),
+                Followers = blog.Followers.Count,
                 IsDeleted = blog.IsDeleted,
                 IsPrive = blog.IsPrive,
                 IsSuspended = blog.IsSuspended,
@@ -77,7 +70,7 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] BlogCreationDto CreatedBlog)
+        public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
             if (CreatedBlog == null)
             {
@@ -85,7 +78,7 @@ namespace Travelblog.Api.Controllers
             }
 
             // Adding default user information
-            User DefaultUser = new User();
+            User DefaultUser = new();
             _configuration.GetSection("DefaultUser").Bind(DefaultUser);
             //
 
@@ -97,7 +90,7 @@ namespace Travelblog.Api.Controllers
                 StartDate = DateTime.UtcNow
             };
 
-            Blog createdBlog = await _blogService.CreateBlog(newBlog);
+            Blog createdBlog = _blogService.CreateBlog(newBlog);
             return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
         }
 

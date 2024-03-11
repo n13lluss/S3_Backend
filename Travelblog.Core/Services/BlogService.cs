@@ -3,16 +3,11 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class BlogService : IBlogService
+    public class BlogService(IBlogRepository blogRepository) : IBlogService
     {
-        private readonly IBlogRepository _repository;
-        private readonly IBlogPostRepository _blogpostRepository;
-        public BlogService(IBlogRepository blogRepository, IBlogPostRepository postRepository)
-        {
-            _repository = blogRepository;
-            _blogpostRepository = postRepository;
-        }
-        public async Task<Blog> CreateBlog(Blog blog)
+        private readonly IBlogRepository _repository = blogRepository;
+
+        public Blog CreateBlog(Blog blog)
         {
             if (blog == null)
             {
@@ -67,11 +62,7 @@ namespace Travelblog.Core.Services
             try
             {
                 var blog = await _repository.GetById(id);
-                if (blog == null)
-                {
-                    throw new Exception($"Blog with ID {id} not found");
-                }
-                return blog;
+                return blog ?? throw new Exception($"Blog with ID {id} not found");
             }
             catch (Exception ex)
             {

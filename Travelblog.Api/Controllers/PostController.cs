@@ -9,13 +9,10 @@ namespace Travelblog.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class PostController : ControllerBase
+    public class PostController(IPostService postService) : ControllerBase
     {
-        private IPostService _postService;
-        public PostController(IPostService postService)
-        {
-            _postService = postService;
-        }
+        private readonly IPostService _postService = postService;
+
         // POST api/<PostController>
         [HttpPost]
         public void Post([FromBody] PostCreationDto post)

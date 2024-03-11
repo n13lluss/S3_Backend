@@ -9,16 +9,10 @@ using Travelblog.Dal.Entities;
 
 namespace Travelblog.Dal.Repositories
 {
-    public class PostRepository : IPostRepository
+    public class PostRepository(TravelBlogDbContext dbContext, IBlogPostRepository blogPostRepository) : IPostRepository
     {
-        private readonly TravelBlogDbContext _dbContext;
-        private readonly IBlogPostRepository _blogPostRepository;
-
-        public PostRepository(TravelBlogDbContext dbContext, IBlogPostRepository blogPostRepository)
-        {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
-        }
+        private readonly TravelBlogDbContext _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        private readonly IBlogPostRepository _blogPostRepository = blogPostRepository ?? throw new ArgumentNullException(nameof(blogPostRepository));
 
         public async Task<List<Core.Models.Post>> GetAllPostsByBlogIdAsync(int id)
         {
@@ -34,37 +28,35 @@ namespace Travelblog.Dal.Repositories
 
         public async Task<Core.Models.Post> CreatePostAsync(Core.Models.Post post, int blogid)
         {
-            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                try
+                var postEntity = new Entities.Post
                 {
-                    var postEntity = new Entities.Post
-                    {
-                        Name = post.Name,
-                        Description = post.Description,
-                        Likes = post.Likes,
-                        Prive = post.IsPrive,
-                        Suspended = post.IsSuspended,
-                        Deleted = post.IsDeleted,
-                        PostedOn = post.Posted,
-                        TripId = 3
-                    };
+                    Name = post.Name,
+                    Description = post.Description,
+                    Likes = post.Likes,
+                    Prive = post.IsPrive,
+                    Suspended = post.IsSuspended,
+                    Deleted = post.IsDeleted,
+                    PostedOn = post.Posted,
+                    TripId = 3
+                };
 
-                    await _dbContext.Posts.AddAsync(postEntity);
-                    await _dbContext.SaveChangesAsync();
+                await _dbContext.Posts.AddAsync(postEntity);
+                await _dbContext.SaveChangesAsync();
 
-                    await _blogPostRepository.CreateBlogPostAsync(postEntity.Id, blogid);
+                await _blogPostRepository.CreateBlogPostAsync(postEntity.Id, blogid);
 
-                    await transaction.CommitAsync();
+                await transaction.CommitAsync();
 
-                    return MapEntityToCoreModel(postEntity);
-                }
-                catch (DbUpdateException ex)
-                {
-                    // Handle the exception (log, rethrow, or return null)
-                    await transaction.RollbackAsync();
-                    return null;
-                }
+                return MapEntityToCoreModel(postEntity);
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle the exception (log, rethrow, or return null)
+                await transaction.RollbackAsync();
+                return null;
             }
         }
 
@@ -100,30 +92,28 @@ namespace Travelblog.Dal.Repositories
 
         public async Task<Core.Models.Post> DeletePostAsync(int id)
         {
-            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                try
+                var post = await _dbContext.Posts.FindAsync(id);
+                if (post != null)
                 {
-                    var post = await _dbContext.Posts.FindAsync(id);
-                    if (post != null)
-                    {
-                        _dbContext.Posts.Remove(post);
-                        await _dbContext.SaveChangesAsync();
+                    _dbContext.Posts.Remove(post);
+                    await _dbContext.SaveChangesAsync();
 
-                        // Now delete the associated blog post
-                        await _blogPostRepository.DeleteBlogPostAsync(id);
-                    }
-
-                    await transaction.CommitAsync();
-
-                    return MapEntityToCoreModel(post);
+                    // Now delete the associated blog post
+                    await _blogPostRepository.DeleteBlogPostAsync(id);
                 }
-                catch (DbUpdateException ex)
-                {
-                    // Handle the exception (log, rethrow, or return null)
-                    await transaction.RollbackAsync();
-                    return null;
-                }
+
+                await transaction.CommitAsync();
+
+                return MapEntityToCoreModel(post);
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle the exception (log, rethrow, or return null)
+                await transaction.RollbackAsync();
+                return null;
             }
         }
 

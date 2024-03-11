@@ -8,16 +8,10 @@ namespace Travelblog.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [AllowAnonymous]
-    public class UserController : ControllerBase
+    public class UserController(IAuthService authService, IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly IAuthService _authService;
-
-        public UserController(IAuthService authService, IUserService userService)
-        {
-            _authService = authService;
-            _userService = userService;
-        }
+        private readonly IUserService _userService = userService;
+        private readonly IAuthService _authService = authService;
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] UserDto userLogin)
@@ -40,7 +34,7 @@ namespace Travelblog.Api.Controllers
                
                 return Ok(new { Token = token });
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(500, "An error occurred while processing the request. Please try again later.");
             }

@@ -8,14 +8,9 @@ using Travelblog.Dal.Entities;
 
 namespace Travelblog.Dal.Repositories
 {
-    public class BlogPostRepository : IBlogPostRepository
+    public class BlogPostRepository(TravelBlogDbContext dbContext) : IBlogPostRepository
     {
-        private readonly TravelBlogDbContext _dbContext;
-
-        public BlogPostRepository(TravelBlogDbContext dbContext)
-        {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
+        private readonly TravelBlogDbContext _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
         public async Task CreateBlogPostAsync(int postId, int blogId)
         {

@@ -16,6 +16,6 @@ namespace Travelblog.Api.Models.BlogDto
         public bool IsDeleted { get; set; } = false;
         public int Followers { get; set; } = 0;
         public int Trip_Id { get; set; } = 0;
-        public List<Country> Countries { get; set; } = new List<Country>();
+        public List<Country> Countries { get; set; } = [];
     }
 }
