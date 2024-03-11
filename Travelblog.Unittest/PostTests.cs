@@ -26,7 +26,6 @@ namespace Travelblog.Unittest
             {
                 Name = "Test Post",
                 Description = "Test Content"
-                // Add other properties as needed
             };
 
             postRepositoryMock.Setup(repo => repo.CreatePost(It.IsAny<Post>()))
@@ -41,7 +40,6 @@ namespace Travelblog.Unittest
             Assert.NotNull(result);
             Assert.Equal(inputPost.Name, result.Name);
             Assert.Equal(inputPost.Description, result.Description);
-            // Add more assertions based on your Post model
         }
 
         [Fact]

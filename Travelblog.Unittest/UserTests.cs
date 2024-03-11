@@ -120,7 +120,6 @@ namespace Travelblog.Unittest
             {
                 Id = userId,
                 UserName = "TestUser"
-                // Add other properties as needed
             };
 
             userRepositoryMock.Setup(repo => repo.GetById(It.IsAny<int>()))
@@ -133,7 +132,6 @@ namespace Travelblog.Unittest
             Assert.NotNull(result);
             Assert.Equal(userId, result.Id);
             Assert.Equal("TestUser", result.UserName);
-            // Add more assertions based on your User model
         }
 
         [Fact]
@@ -149,7 +147,6 @@ namespace Travelblog.Unittest
             {
                 Id = userId,
                 UserName = "TestUser"
-                // Add other properties as needed
             };
 
             userRepositoryMock.Setup(repo => repo.GetById(It.IsAny<int>()))

@@ -27,7 +27,7 @@ namespace Travelblog.Api.Controllers
         public IActionResult Get()
         {
             List<BlogSlimDTO> smallBlogs = _blogService.GetBlogList()
-                .Where(blog => !blog.IsDeleted) // Filter out deleted blogs
+                .Where(blog => !blog.IsDeleted)
                 .Select(blog => new BlogSlimDTO
                 {
                     Id = blog.Id,

@@ -8,7 +8,5 @@ namespace Travelblog.Core.Interfaces
         Blog Create(Blog blog);
         Blog Update(Blog blog);
         Blog GetById(int id);
-
-        // Other methods like Delete, AddCountry, AddFollower, etc. can be added to match your requirements
     }
 }

@@ -40,12 +40,10 @@ public class AuthService : IAuthService
 
     private byte[] GenerateSecurityKey(int keySizeInBytes)
     {
-        // Read the SecretKey from configuration
         string secretKey = _configuration["Jwt:SecretKey"];
 
         try
         {
-            // If the SecretKey is present, try to decode it
             return Convert.FromBase64String(secretKey);
         }
         catch (FormatException)
@@ -53,14 +51,12 @@ public class AuthService : IAuthService
             // Handle invalid Base64 format (consider generating a new key in this case)
         }
 
-        // If the SecretKey is not present or invalid, generate a new one
         byte[] keyBytes = new byte[keySizeInBytes];
         using (var rng = new RNGCryptoServiceProvider())
         {
             rng.GetBytes(keyBytes);
         }
 
-        // Save the generated key in configuration
         _configuration["Jwt:SecretKey"] = Convert.ToBase64String(keyBytes);
 
         return keyBytes;
