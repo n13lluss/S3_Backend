@@ -35,3 +35,19 @@ jobs:
       run: dotnet restore TravelblogBackend.sln
     - name: Test
       run: dotnet test Travelblog.Unittest/Travelblog.Unittest.csproj --verbosity normal
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: FTP Transfer
+        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: 'ftp'
+          local-dir: 'bin/Release'
+          server-dir: '/domains/i427798.luna.fhict.nl'
+          port: 21
+
