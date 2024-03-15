@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <PublishDir>bin\Release\net8.0\win-x64\publish\</PublishDir>
+    <OutputPath>bin\Release\net8.0\win-x64\publish\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
