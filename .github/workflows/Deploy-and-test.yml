@@ -58,7 +58,7 @@ jobs:
         run: mkdir -p publish/
       
       - name: Build Release for deployment
-        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
+        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0
 
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -69,4 +69,3 @@ jobs:
           server-dir: '/domains/i427798.luna.fhict.nl/'
           port: 21
           protocol: ftps
-          local-dir: publish/
