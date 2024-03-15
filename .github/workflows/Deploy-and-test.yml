@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-and-publish:
 
     runs-on: ubuntu-latest
     environment: production
@@ -18,14 +18,12 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore TravelblogBackend.sln
-    - name: Publish Release
+    - name: Restore dependencies and Publish Release
       run: dotnet publish Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --runtime win-x64 --output publish/
 
   test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-and-publish
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -39,8 +37,11 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: test
-    steps:  
+    needs: [build-and-publish, test]
+    steps:
+      - name: Get latest code
+        uses: actions/checkout@v4
+      
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -50,4 +51,4 @@ jobs:
           server-dir: '/domains/i427798.luna.fhict.nl/'
           port: 21
           protocol: ftps
-          local-dir: Travelblog.Api/bin/Release/net8.0/win-x64/publish/
+          local-dir: publish/
