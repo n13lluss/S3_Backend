@@ -48,6 +48,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: 'ftp'
           local-dir: 'bin/Release/'
-          server-dir: '/domains/i427798.luna.fhict.nl'
+          server-dir: '/domains/i427798.luna.fhict.nl/'
           port: 21
 
