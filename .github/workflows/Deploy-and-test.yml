@@ -39,7 +39,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     steps:  
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
