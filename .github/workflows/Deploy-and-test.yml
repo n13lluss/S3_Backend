@@ -10,6 +10,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
     - uses: actions/checkout@v4
@@ -43,15 +44,15 @@ jobs:
       - name: get latest code
         uses: actions/checkout@v4
       
-      - name: FTP Transfer
-        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: '/domains/i427798.luna.fhict.nl/'
           port: 21
-          protocol: 'ftps'
+          protocol: ftps
 
 
           
