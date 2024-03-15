@@ -48,16 +48,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [build, test]
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: FTP Transfer
-      uses: SamKirkland/FTP-Deploy-Action@4.0.0
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: '/domains/i872272.luna.fhict.nl/'
-        port: 21
+      - name: FTP Transfer
+        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        with:
+          server: 'luna.fhict.nl'
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: 'ftps'
+          port: 21
+          server-dir: '/domains/i872272.luna.fhict.nl/'
+
