@@ -54,4 +54,3 @@ jobs:
           port: 21
           protocol: ftps
           local-dir: 'Travelblog.Api/bin/Release/net8.0/win-x64/publish/'
-          passive: true
