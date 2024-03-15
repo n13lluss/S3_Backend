@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-and-publish:
+  build:
 
     runs-on: ubuntu-latest
     environment: production
@@ -18,12 +18,16 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    - name: Restore dependencies and Publish Release
+    - name: Restore dependencies
+      run: dotnet restore TravelblogBackend.sln
+    - name: Ensure publish directory exists
+      run: mkdir -p publish/
+    - name: Publish Release
       run: dotnet publish Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --runtime win-x64 --output publish/
 
   test:
     runs-on: ubuntu-latest
-    needs: build-and-publish
+    needs: build
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -37,7 +41,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-and-publish, test]
+    needs: [build, test]
     steps:
       - name: Get latest code
         uses: actions/checkout@v4
