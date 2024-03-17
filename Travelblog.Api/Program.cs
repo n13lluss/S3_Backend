@@ -17,7 +17,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app").AllowAnyHeader().AllowAnyMethod();
+                          var allowedCors = builder.Configuration.GetSection("AllowedCors").Get<string[]>();
+                          policy.WithOrigins(allowedCors).AllowAnyHeader().AllowAnyMethod();
                       });
 });
 
