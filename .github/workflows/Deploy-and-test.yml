@@ -8,10 +8,8 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: production
-
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -70,4 +68,3 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: Travelblog.Api/bin/Release/net8.0/win-x64/publish/
-
