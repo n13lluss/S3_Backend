@@ -68,5 +68,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: '/domains/i427798.luna.fhict.nl/'
           port: 21
-          protocol: ftp
+          protocol: ftps-explicit
           local-dir: Travelblog.Api/bin/Release/net8.0/win-x64/publish/
