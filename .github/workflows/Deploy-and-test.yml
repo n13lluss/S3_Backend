@@ -51,7 +51,7 @@
                 - name: Ensure publish directory exists
                   run: mkdir -p publish/
                 - name: Build Release for deployment
-                  run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0
+                  run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
                 - name: 📂 Sync files
                   uses: SamKirkland/FTP-Deploy-Action@v4.3.5
                   with:
