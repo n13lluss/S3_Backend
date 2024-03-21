@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Collections.Generic;
+using System.Security.Claims;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Services;
 using Travelblog.Dal;
@@ -23,6 +23,19 @@ builder.Services.AddCors(options =>
                                  .AllowAnyMethod();
                       });
 });
+
+var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = domain;
+        options.Audience = builder.Configuration["Auth0:Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            NameClaimType = ClaimTypes.NameIdentifier
+        };
+    });
 
 // Register services
 builder.Services.AddScoped<IBlogService, BlogService>();
@@ -69,22 +82,6 @@ builder.Services.AddDbContext<TravelBlogDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolConnection")), ServiceLifetime.Scoped);
 
 // Add Auth0 authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
-        {
-            var audience =
-                  builder.Configuration["Auth0 : AUTH0_AUDIENCE"];
-
-            options.Authority =
-                  builder.Configuration["Auth : AUTH0_DOMAIN"];
-            options.Audience = audience;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = true,
-                ValidateIssuerSigningKey = true
-            };
-        });
-
 
 var app = builder.Build();
 
@@ -100,5 +97,9 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 app.MapControllers();
 app.Run();

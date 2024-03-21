@@ -59,12 +59,6 @@ namespace Travelblog.Api.Controllers
             }
         }
 
-        [HttpGet("checkavailability")]
-        public IActionResult CheckAvailability()
-        {
-            return StatusCode(200);   
-        }
-
         [HttpPost("login")]
         [AllowAnonymous]
         public IActionResult Login([FromBody] UserDto userLogin)
