@@ -70,6 +70,7 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
             if (CreatedBlog == null)
