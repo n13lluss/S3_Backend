@@ -7,5 +7,6 @@ namespace Travelblog.Core.Interfaces
         User GetById(int id);
         User GetByUserName(string userName);
         User GetByEmail(string email);
+        User CreateUser(User user);
     }
 }

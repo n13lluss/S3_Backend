@@ -1,4 +1,6 @@
-﻿using Travelblog.Core.Interfaces;
+﻿using BCrypt.Net;
+using System.Text;
+using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
@@ -7,25 +9,48 @@ namespace Travelblog.Core.Services
     {
         private readonly IUserRepository _userRepository = userRepository;
 
-        public bool CheckUser(string UsernameEmail, string Password)
+        public bool CheckAvailability(User user)
         {
-            User FoundUser;
-            if (UsernameEmail.Contains('@'))
+            if(user == null)
             {
-                FoundUser = _userRepository.GetByEmail(UsernameEmail);
-            }
-            else
-            {
-                FoundUser = _userRepository.GetByUserName(UsernameEmail);
+                return false;
             }
 
-            if (FoundUser == null || FoundUser.Password != Password)
+            var exist = _userRepository.GetByUserName(user.UserName) != null || _userRepository.GetByEmail(user.Email) != null;
+
+            if(exist)
             {
                 return false;
             }
 
             return true;
         }
+
+        public bool CheckUser(string usernameEmail, string enteredPassword)
+        {
+            User foundUser;
+            if (usernameEmail.Contains('@'))
+            {
+                foundUser = _userRepository.GetByEmail(usernameEmail);
+            }
+            else
+            {
+                foundUser = _userRepository.GetByUserName(usernameEmail);
+            }
+
+            if (foundUser == null)
+            {
+                return false; // User not found
+            }
+            
+            bool valid = BCrypt.Net.BCrypt.Verify(foundUser.Password, BCrypt.Net.BCrypt.HashPassword(foundUser.Password));
+
+            // Compare decrypted entered password with stored password
+            bool passwordIsValid = foundUser.Password == enteredPassword;
+
+            return valid;
+        }      
+
 
         public User GetById(int id)
         {
@@ -36,6 +61,12 @@ namespace Travelblog.Core.Services
         {
             User user = GetById(UserId);
             return user == null ? throw new Exception("User not found") : user.UserName;
+        }
+
+        public bool RegisterUser(User user)
+        {
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            return _userRepository.CreateUser(user) != null;
         }
     }
 }
