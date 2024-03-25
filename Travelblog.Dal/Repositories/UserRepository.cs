@@ -7,6 +7,30 @@ namespace Travelblog.Dal.Repositories
     {
         private readonly TravelBlogDbContext _dbContext = dbContext;
 
+        public User CreateUser(User user)
+        {
+            Entities.User userEntity = new Entities.User()
+            {
+                Username = user.UserName,
+                Password = user.Password,
+                Email = user.Email,
+                Suspended = user.Suspended,
+                Deleted = false,
+                Role = "User"
+            };
+
+            try
+            {
+                _dbContext.Users.Add(userEntity);
+                _dbContext.SaveChanges();
+            }
+            catch
+            {
+                return null;
+            }
+            return user; 
+        }
+
         public User GetByEmail(string email)
         {
             Entities.User user = _dbContext.Users.FirstOrDefault(u => u.Email == email);
