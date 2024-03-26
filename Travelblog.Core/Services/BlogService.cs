@@ -3,9 +3,10 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class BlogService(IBlogRepository blogRepository) : IBlogService
+    public class BlogService(IBlogRepository blogRepository, IBlogLikeRepository blogLikeRepository) : IBlogService
     {
-        private readonly IBlogRepository _repository = blogRepository;
+        private readonly IBlogRepository _blogrepository = blogRepository;
+        private readonly IBlogLikeRepository _blogLikeRepository = blogLikeRepository;
 
         public Blog CreateBlog(Blog blog)
         {
@@ -21,7 +22,7 @@ namespace Travelblog.Core.Services
 
             try
             {
-                return _repository.Create(blog);
+                return _blogrepository.Create(blog);
             }
             catch (Exception ex)
             {
@@ -43,7 +44,7 @@ namespace Travelblog.Core.Services
 
             try
             {
-                Blog updatedBlog = await _repository.Update(blog);
+                Blog updatedBlog = await _blogrepository.Update(blog);
                 return updatedBlog;
             }
             catch (Exception ex)
@@ -61,8 +62,9 @@ namespace Travelblog.Core.Services
 
             try
             {
-                var blog = await _repository.GetById(id);
-                return blog ?? throw new Exception($"Blog with ID {id} not found");
+                var blog = await _blogrepository.GetById(id);
+                blog.Likes = _blogLikeRepository.GetLikes(blog);
+                return blog;
             }
             catch (Exception ex)
             {
@@ -72,10 +74,14 @@ namespace Travelblog.Core.Services
 
         public async Task<List<Blog>> GetBlogList()
         {
-            var blogs = await _repository.GetAll();
+            var blogs = await _blogrepository.GetAll();
             if (blogs == null || blogs.Count == 0)
             {
                 throw new Exception("Error in getting data");
+            }
+            foreach (var blog in blogs)
+            {
+                blog.Likes = _blogLikeRepository.GetLikes(blog);
             }
             return blogs;
         }
@@ -107,10 +113,30 @@ namespace Travelblog.Core.Services
 
         public Blog LikeBlog(Blog blog, User user)
         {
-            // Implement logic to like a blog
-            throw new NotImplementedException();
+            if (blog == null || user == null)
+            {
+                throw new ArgumentNullException(nameof(blog));
+            }
+            try
+            {
+                var liked = _blogLikeRepository.Liked(blog, user);
+                if (!liked)
+                {
+                    blog = _blogLikeRepository.LikeBlog(blog, user);
+                    _blogrepository.Update(blog);
+                }
+                else
+                {
+                    return UnLikeBlog(blog, user);
+                }
+                return blog;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error liking blog", ex);
+            }
         }
-
+        
         public Blog RemoveCountry(Country country)
         {
             // Implement logic to remove country from blog
@@ -131,8 +157,20 @@ namespace Travelblog.Core.Services
 
         public Blog UnLikeBlog(Blog blog, User user)
         {
-            // Implement logic to unlike a blog
-            throw new NotImplementedException();
+            if (blog == null || user == null)
+            {
+                throw new ArgumentNullException(nameof(blog));
+            }
+            try
+            {
+                _blogLikeRepository.UnLikeBlog(blog, user);
+                _blogrepository.Update(blog);
+                return blog;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error unliking blog", ex);
+            }
         }
     }
 }

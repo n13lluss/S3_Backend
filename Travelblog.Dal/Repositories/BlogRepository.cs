@@ -108,6 +108,10 @@ namespace Travelblog.Dal.Repositories
             {
                 var blogEntity = _dbContext.Blogs.FirstOrDefault(blog => blog.Id == id);
                 Blog found = MapEntityToCoreModel(blogEntity);
+                if(found == null)
+                {
+                    return null;
+                }
                 found.Posts = await _blogPostRepository.GetAllBlogPostsAsync(id);
                 found.Posts = [.. found.Posts.OrderBy(post => post.Posted)];
                 await transaction.CommitAsync();
@@ -122,7 +126,7 @@ namespace Travelblog.Dal.Repositories
 
 
 
-        private static Blog MapEntityToCoreModel(Entities.Blog entity)
+        private static Blog? MapEntityToCoreModel(Entities.Blog entity)
         {
             return entity != null
                 ? new Blog
@@ -137,7 +141,7 @@ namespace Travelblog.Dal.Repositories
                     IsSuspended = entity.Suspended,
                     IsDeleted = entity.Deleted
                 }
-                : new Blog();
+                : null;
         }
 
     }

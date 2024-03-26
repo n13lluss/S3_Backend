@@ -122,6 +122,20 @@ namespace Travelblog.Api.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id}/like")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Like(int id, [FromBody] string username)
+        {
+            Blog found = await _blogService.GetBlogById(id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+            _blogService.LikeBlog(found, _userService.GetUserByName(username));
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id)
