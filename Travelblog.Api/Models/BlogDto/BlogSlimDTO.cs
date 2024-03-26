@@ -1,4 +1,6 @@
-﻿namespace Travelblog.Api.Models.BlogDto
+﻿using Org.BouncyCastle.Security;
+
+namespace Travelblog.Api.Models.BlogDto
 {
     public class BlogSlimDTO
     {
@@ -8,5 +10,6 @@
         public string Description { get; set; }
         public DateTime Posted_On { get; set; }
         public int likes { get; set; }
+        public bool liked { get; set; }
     }
 }

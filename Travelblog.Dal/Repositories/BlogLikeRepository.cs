@@ -44,7 +44,7 @@ namespace Travelblog.Dal.Repositories
                 _dbContext.SaveChanges();
                 blog.Likes++;
             }
-            if (exists.Result.Status == false)
+            else if (exists.Result.Status == false)
             {
                 exists.Result.Status = true;
                 _dbContext.BlogLikes.Update(exists.Result);

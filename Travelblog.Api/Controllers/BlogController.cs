@@ -21,7 +21,7 @@ namespace Travelblog.Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string? username)
         {
             List<BlogSlimDTO> smallBlogs = (await _blogService.GetBlogList())
                 .Where(blog => !blog.IsDeleted)
@@ -33,21 +33,29 @@ namespace Travelblog.Api.Controllers
                     Description = blog.Description,
                     Posted_On = blog.StartDate,
                     likes = blog.Likes,
+                    liked = username != null ? _blogService.Liked(blog, _userService.GetUserByName(username)) : false,
                 })
                 .ToList();
 
             return Ok(smallBlogs);
         }
 
+
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, string? username)
         {
             Blog blog = await _blogService.GetBlogById(id);
 
             if (blog == null)
             {
                 return NotFound();
+            }
+
+            bool liked = false;
+            if (username != null)
+            {
+                liked = _blogService.Liked(blog, _userService.GetUserByName(username));
             }
 
             BlogViewDto blogViewDto = new()
@@ -58,6 +66,7 @@ namespace Travelblog.Api.Controllers
                 Description = blog.Description,
                 StartDate = blog.StartDate,
                 Likes = blog.Likes,
+                Liked = liked,
                 Posts = blog.Posts,
                 Followers = blog.Followers.Count,
                 IsDeleted = blog.IsDeleted,
@@ -68,6 +77,7 @@ namespace Travelblog.Api.Controllers
 
             return Ok(blogViewDto);
         }
+
 
         [HttpPost]
         [Authorize]

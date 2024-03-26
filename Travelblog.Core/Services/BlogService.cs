@@ -172,5 +172,21 @@ namespace Travelblog.Core.Services
                 throw new Exception("Error unliking blog", ex);
             }
         }
+
+        public bool Liked(Blog blog, User user)
+        {
+            if(blog == null || user == null)
+            {
+                throw new ArgumentNullException(nameof(blog));
+            }
+            try
+            {
+                return _blogLikeRepository.Liked(blog, user);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error checking if blog is liked", ex);
+            }
+        }
     }
 }
