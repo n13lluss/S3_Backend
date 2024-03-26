@@ -85,7 +85,7 @@ namespace Travelblog.Api.Controllers
 
             Blog newBlog = new()
             {
-                User_Id = DefaultUser.Id,
+                User_Id = _userService.GetUserByName(CreatedBlog.Username).Id,
                 Name = CreatedBlog.Name,
                 Description = CreatedBlog.Description,
                 StartDate = DateTime.UtcNow

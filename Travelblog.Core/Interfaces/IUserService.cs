@@ -8,5 +8,6 @@ namespace Travelblog.Core.Interfaces
         public bool CheckUser(string UsernameEmail,  string Password);
         public bool CheckAvailability(User user);
         public bool RegisterUser(User user);
+        public User GetUserByName(string name);
     }
 }

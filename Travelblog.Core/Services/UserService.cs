@@ -1,6 +1,4 @@
-﻿using BCrypt.Net;
-using System.Text;
-using Travelblog.Core.Interfaces;
+﻿using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
@@ -63,9 +61,13 @@ namespace Travelblog.Core.Services
             return user == null ? throw new Exception("User not found") : user.UserName;
         }
 
+        public User GetUserByName(string name)
+        {
+            return _userRepository.GetByUserName(name);
+        }
+
         public bool RegisterUser(User user)
         {
-            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
             return _userRepository.CreateUser(user) != null;
         }
     }
