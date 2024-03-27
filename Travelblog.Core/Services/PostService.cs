@@ -17,7 +17,7 @@ namespace Travelblog.Core.Services
 
             try
             {
-                Post createdPost = await _postRepository.CreatePostAsync(post, blogId);
+                Post createdPost = _postRepository.CreatePostAsync(post, blogId);
 
                 return createdPost ?? throw new Exception("Error creating post");
             }

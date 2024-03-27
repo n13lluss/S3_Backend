@@ -26,9 +26,8 @@ namespace Travelblog.Dal.Repositories
             return MapEntityToCoreModel(collected);
         }
 
-        public async Task<Core.Models.Post> CreatePostAsync(Core.Models.Post post, int blogid)
+        public Core.Models.Post CreatePostAsync(Core.Models.Post post, int blogid)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 var postEntity = new Entities.Post
@@ -43,22 +42,32 @@ namespace Travelblog.Dal.Repositories
                     TripId = 3
                 };
 
-                await _dbContext.Posts.AddAsync(postEntity);
-                await _dbContext.SaveChangesAsync();
+                // Save the post entity to the database
+                _dbContext.Posts.Add(postEntity);
+                _dbContext.SaveChanges();
 
-                await _blogPostRepository.CreateBlogPostAsync(postEntity.Id, blogid);
+                // Once the post is saved, create a BlogPost entry
+                BlogPost blogPost = new()
+                {
+                    BlogId = blogid,
+                    PostId = postEntity.Id
+                };
 
-                await transaction.CommitAsync();
+                // Add the BlogPost entry to the database
+                _dbContext.BlogPosts.Add(blogPost);
+                _dbContext.SaveChanges();
 
+                // Map the post entity to Core.Models.Post and return it
                 return MapEntityToCoreModel(postEntity);
             }
             catch (DbUpdateException ex)
             {
-                // Handle the exception (log, rethrow, or return null)
-                await transaction.RollbackAsync();
+                // Handle database update exception (log, rethrow, or return null)
                 return null;
             }
         }
+
+
 
         public async Task<Core.Models.Post> UpdatePostAsync(Core.Models.Post post)
         {
