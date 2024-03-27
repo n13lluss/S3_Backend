@@ -61,6 +61,15 @@ namespace Travelblog.Core.Services
             return user == null ? throw new Exception("User not found") : user.UserName;
         }
 
+        public User GetUserById(string idstring)
+        {
+            if(idstring.Length == 0)
+            {
+                return null;
+            }
+            return _userRepository.GetById(idstring);
+        }
+
         public User GetUserByName(string name)
         {
             return _userRepository.GetByUserName(name);

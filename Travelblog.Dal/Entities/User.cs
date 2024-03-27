@@ -3,6 +3,7 @@
 public partial class User
 {
     public int Id { get; set; }
+    public string IdString { get; set; }
 
     public string Username { get; set; } = null!;
 

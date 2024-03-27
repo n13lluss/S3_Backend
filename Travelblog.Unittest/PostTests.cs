@@ -27,10 +27,9 @@ namespace Travelblog.Unittest
                 Description = "Test Content"
             };
 
+            // Configure the mock to return the input post when CreatePostAsync is called
             postRepositoryMock.Setup(repo => repo.CreatePostAsync(It.IsAny<Post>(), It.IsAny<int>()))
-                             .ReturnsAsync((Post createdPost, int id) => createdPost);
-
-            blogPostRepositoryMock.Setup(repo => repo.CreateBlogPostAsync(It.IsAny<int>(), It.IsAny<int>()));
+                             .Returns((Post createdPost, int id) => createdPost);
 
             // Act
             var result = await postService.CreatePostAsync(inputPost, blogId);
@@ -40,6 +39,7 @@ namespace Travelblog.Unittest
             Assert.Equal(inputPost.Name, result.Name);
             Assert.Equal(inputPost.Description, result.Description);
         }
+
 
 
 

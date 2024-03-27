@@ -16,7 +16,7 @@ namespace Travelblog.Dal.Repositories
 
         public async Task<List<Blog>> GetAll()
         {
-            var blogs = await _dbContext.Blogs.ToListAsync();
+            var blogs = await _dbContext.Blogs.Where(b => !b.Deleted && !b.Suspended && !b.Prive && !b.Creator.Deleted && !b.Creator.Suspended).ToListAsync();
             List<Blog> result = blogs.Select(blog => MapEntityToCoreModel(blog)).ToList();
             return result;
         }

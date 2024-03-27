@@ -21,19 +21,20 @@ namespace Travelblog.Api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Get(string? username)
+        public async Task<IActionResult> Get(string? idString)
         {
             List<BlogSlimDTO> smallBlogs = (await _blogService.GetBlogList())
                 .Where(blog => !blog.IsDeleted)
                 .Select(blog => new BlogSlimDTO
                 {
                     Id = blog.Id,
-                    User_Name = _userService.GetNameById(blog.User_Id),
+                    User_Name = _userService.GetById(blog.User_Id).UserName,
+                    Creator_Id = _userService.GetById(blog.User_Id).IdString,
                     Name = blog.Name,
                     Description = blog.Description,
                     Posted_On = blog.StartDate,
                     likes = blog.Likes,
-                    liked = username != null ? _blogService.Liked(blog, _userService.GetUserByName(username)) : false,
+                    liked = idString != null ? _blogService.Liked(blog, _userService.GetUserById(idString)) : false,
                 })
                 .ToList();
 
@@ -43,7 +44,7 @@ namespace Travelblog.Api.Controllers
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> Get(int id, string? username)
+        public async Task<IActionResult> Get(int id, string? IdString)
         {
             Blog blog = await _blogService.GetBlogById(id);
 
@@ -53,9 +54,9 @@ namespace Travelblog.Api.Controllers
             }
 
             bool liked = false;
-            if (username != null)
+            if (IdString != null)
             {
-                liked = _blogService.Liked(blog, _userService.GetUserByName(username));
+                liked = _blogService.Liked(blog, _userService.GetUserById(IdString));
             }
 
             BlogViewDto blogViewDto = new()
@@ -63,6 +64,7 @@ namespace Travelblog.Api.Controllers
                 Id = blog.Id,
                 User_Name = _userService.GetNameById(blog.User_Id),
                 Name = blog.Name,
+                Creator_Id = _userService.GetById(blog.User_Id).IdString,
                 Description = blog.Description,
                 StartDate = blog.StartDate,
                 Likes = blog.Likes,
