@@ -108,7 +108,6 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
             Blog found = await _blogService.GetBlogById(id);
@@ -134,8 +133,7 @@ namespace Travelblog.Api.Controllers
             return NoContent();
         }
 
-        [HttpPut("{id}/like")]
-        [AllowAnonymous]
+        [HttpPost("{id}/like")]
         public async Task<IActionResult> Like(int id, [FromBody] string username)
         {
             Blog found = await _blogService.GetBlogById(id);
@@ -149,7 +147,6 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             Blog existingBlog = await _blogService.GetBlogById(id);

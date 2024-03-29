@@ -10,10 +10,11 @@ namespace Travelblog.Dal.Repositories
 
         public User CreateUser(User user)
         {
-            Entities.User userEntity = new Entities.User()
+            Entities.User userEntity = new()
             {
                 Username = user.UserName,
                 Password = user.Password,
+                IdString = user.IdString,
                 Email = user.Email,
                 Suspended = user.Suspended,
                 Deleted = false,

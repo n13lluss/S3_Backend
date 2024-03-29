@@ -31,6 +31,7 @@ namespace Travelblog.Api.Controllers
             {
                 UserName = userRegister.Name,
                 Email = userRegister.Email,
+                IdString = userRegister.IdString,
                 Password = ""
             };
 

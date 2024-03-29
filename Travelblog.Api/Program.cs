@@ -15,13 +15,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-                      builder =>
-                      {
-                          builder.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app")
-                                 .AllowAnyHeader()
-                                 .AllowAnyMethod();
-                      });
+    options.AddPolicy("AllowReactApp", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app")
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
+
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("https://localhost:7170")
+               .AllowAnyHeader()
+               .WithMethods("GET");
+    });
 });
 
 var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
@@ -94,7 +100,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors("AllowReactApp");
+app.UseCors("AllowFrontend");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
