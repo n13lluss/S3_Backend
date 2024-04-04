@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Travelblog.Api.Models.BlogDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
@@ -82,7 +78,6 @@ namespace Travelblog.Api.Controllers
 
 
         [HttpPost]
-        [Authorize]
         public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
         {
             if (CreatedBlog == null)
@@ -143,6 +138,33 @@ namespace Travelblog.Api.Controllers
                 return NotFound();
             }
             _blogService.LikeBlog(found, _userService.GetUserById(IdString));
+            return NoContent();
+        }
+
+        [HttpPost("{id}/follow")]
+        public async Task<IActionResult> Follow(int id, [FromBody] string IdString)
+        {
+            Blog found = await _blogService.GetBlogById(id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+            _blogService.AddFollower(found, _userService.GetUserById(IdString));
+            return NoContent();
+        }
+
+        [HttpPost("{Id}/country")]
+        [AllowAnonymous]
+        public async Task<IActionResult> AddCountry(int Id, [FromBody] List<Country> countries)
+        {
+            Blog found = await _blogService.GetBlogById(Id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+            Blog blog = await  _blogService.AddCountries(found, countries);
             return NoContent();
         }
 

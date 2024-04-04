@@ -45,9 +45,22 @@ namespace Travelblog.Core.Services
             }
         }
 
-        public Task<Post> GetPostByIdAsync(int id)
+        public async Task<Post> GetPostByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            if(id <= 0)
+            {
+                throw new ArgumentException("Invalid post id");
+            }
+            try
+            {
+                var post = await _postRepository.GetPostByIDAsync(id);
+                return post ?? throw new Exception("Post not found");
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to get post", ex);
+            }
         }
 
         public async Task<Post> UpdatePostAsync(Post post)

@@ -1,6 +1,4 @@
-﻿using Org.BouncyCastle.Security;
-
-namespace Travelblog.Api.Models.BlogDto
+﻿namespace Travelblog.Api.Models.BlogDto
 {
     public class BlogSlimDTO
     {

@@ -86,22 +86,9 @@ namespace Travelblog.Core.Services
             return blogs;
         }
 
-
-        public Blog AddCountry(Country country)
-        {
-            // Implement logic to add country to blog
-            throw new NotImplementedException();
-        }
-
         public Blog AddFollower(Blog blog, User user)
         {
             // Implement logic to add follower to blog
-            throw new NotImplementedException();
-        }
-
-        public Blog AddPost(Post post)
-        {
-            // Implement logic to add post to blog
             throw new NotImplementedException();
         }
 
@@ -136,22 +123,10 @@ namespace Travelblog.Core.Services
                 throw new Exception("Error liking blog", ex);
             }
         }
-        
-        public Blog RemoveCountry(Country country)
-        {
-            // Implement logic to remove country from blog
-            throw new NotImplementedException();
-        }
 
         public Blog RemoveFollower(Blog blog, User user)
         {
             // Implement logic to remove follower from blog
-            throw new NotImplementedException();
-        }
-
-        public Blog RestoreBlog(Blog blog)
-        {
-            // Implement logic to restore a suspended blog
             throw new NotImplementedException();
         }
 
@@ -187,6 +162,29 @@ namespace Travelblog.Core.Services
             {
                 throw new Exception("Error checking if blog is liked", ex);
             }
+        }
+
+        public async Task<Blog> AddCountries(Blog blog, List<Country> countries)
+        {
+            if(blog == null || countries == null)
+            {
+                throw new ArgumentException("Invalid blog id or country");
+            }
+            
+            blog.Countries = countries;
+            try
+            {
+                return await _blogrepository.Update(blog);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error adding countries to blog", ex);
+            }   
+        }
+
+        public async Task<Blog> RemoveCountry(Blog blog, Country country)
+        {
+            throw new NotImplementedException();
         }
     }
 }

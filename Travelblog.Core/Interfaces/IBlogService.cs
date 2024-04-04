@@ -13,8 +13,7 @@ namespace Travelblog.Core.Interfaces
         public bool Liked(Blog blog, User user);
         public Blog AddFollower(Blog blog, User user);
         public Blog RemoveFollower(Blog blog, User user);
-        public List<User> GetFollowers(int Id);
-        public Blog AddCountry(Country country);
-        public Blog RemoveCountry(Country country);
+        public List<User> GetFollowers(int BlogId);
+        public Task<Blog> AddCountries(Blog blog, List<Country> country);
     }
 }

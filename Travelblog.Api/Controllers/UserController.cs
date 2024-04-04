@@ -20,7 +20,7 @@ namespace Travelblog.Api.Controllers
         [HttpPost("register")]
         [AllowAnonymous]
         public IActionResult Register([FromBody] UserRegisterDto userRegister)
-        {
+            {
             if (userRegister == null)
             {
                 return BadRequest("Invalid input. Please provide valid registration details.");

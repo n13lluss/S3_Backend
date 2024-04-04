@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Travelblog.Core.Models;
+﻿using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Interfaces
 {

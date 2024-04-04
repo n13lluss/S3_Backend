@@ -8,7 +8,7 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     public class PostController(IPostService postService) : ControllerBase
     {
         private readonly IPostService _postService = postService;

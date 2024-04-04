@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using System.Drawing;
 using Travelblog.Core.Interfaces;
-using Travelblog.Core.Models;
-using Travelblog.Dal.Entities;
 using Blog = Travelblog.Core.Models.Blog;
 
 namespace Travelblog.Dal.Repositories
@@ -33,7 +29,7 @@ namespace Travelblog.Dal.Repositories
                 Prive = blog.IsPrive,
                 Suspended = blog.IsSuspended,
                 Deleted = blog.IsDeleted,
-                TripId = null
+                TripId = null,
             };
 
             _dbContext.Blogs.Add(blogEntity);
@@ -67,6 +63,17 @@ namespace Travelblog.Dal.Repositories
                     existingBlogEntity.Deleted = blog.IsDeleted;
                     existingBlogEntity.Description = blog.Description;
                     existingBlogEntity.TripId = null;
+
+                    _dbContext.BlogCountries.RemoveRange(_dbContext.BlogCountries.Where(bc => bc.BlogId == blog.Id));
+
+                    foreach (Core.Models.Country country in blog.Countries)
+                    {
+                        _dbContext.BlogCountries.Add(new Entities.BlogCountry
+                        {
+                            BlogId = blog.Id,
+                            CountryId = country.Id
+                        });
+                    }
 
                     if (blog.IsDeleted == true)
                     {
@@ -112,8 +119,16 @@ namespace Travelblog.Dal.Repositories
                 {
                     return null;
                 }
+                //returns posts
                 found.Posts = await _blogPostRepository.GetAllBlogPostsAsync(id);
                 found.Posts = [.. found.Posts.OrderBy(post => post.Posted)];
+                //returns countries
+                found.Countries = _dbContext.BlogCountries.Where(bc => bc.BlogId == id).Select(bc => new Core.Models.Country
+                {
+                    Id = bc.CountryId,
+                    Name = bc.Country.Name,
+                    Continent = bc.Country.Continent
+                }).ToList();
                 await transaction.CommitAsync();
                 return found;
             }
