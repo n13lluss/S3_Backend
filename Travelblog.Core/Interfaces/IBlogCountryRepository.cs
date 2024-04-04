@@ -8,5 +8,6 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IBlogCountryRepository
     {
+        Task<List<Core.Models.Country>> GetCountriesByBlog(int blogId);
     }
 }

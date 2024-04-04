@@ -54,6 +54,7 @@ builder.Services.AddScoped<IBlogPostRepository, BlogPostRepository>();
 builder.Services.AddScoped<IBlogLikeRepository, BlogLikeRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<ICountryService, CountryService>();
+builder.Services.AddScoped<IBlogCountryRepository, BlogCountryRepository>();
 
 // Add controllers
 builder.Services.AddControllers();

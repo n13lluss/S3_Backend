@@ -3,9 +3,10 @@ using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class BlogService(IBlogRepository blogRepository, IBlogLikeRepository blogLikeRepository) : IBlogService
+    public class BlogService(IBlogRepository blogRepository, IBlogLikeRepository blogLikeRepository, IBlogCountryRepository blogCountryRepository) : IBlogService
     {
         private readonly IBlogRepository _blogrepository = blogRepository;
+        private readonly IBlogCountryRepository _blogCountryRepository = blogCountryRepository;
         private readonly IBlogLikeRepository _blogLikeRepository = blogLikeRepository;
 
         public Blog CreateBlog(Blog blog)
@@ -82,6 +83,7 @@ namespace Travelblog.Core.Services
             foreach (var blog in blogs)
             {
                 blog.Likes = _blogLikeRepository.GetLikes(blog);
+                blog.Countries = await _blogCountryRepository.GetCountriesByBlog(blog.Id);
             }
             return blogs;
         }

@@ -23,7 +23,8 @@ namespace Travelblog.Api.Controllers
             {
             if (userRegister == null)
             {
-                return BadRequest("Invalid input. Please provide valid registration details.");
+                //BadRequest("Invalid input. Please provide valid registration details.");
+                return NoContent();
             }
 
             User user = new()

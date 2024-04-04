@@ -9,11 +9,12 @@ namespace Travelblog.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService) : ControllerBase
+    public class BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService, ICountryService countryService) : ControllerBase
     {
         private readonly IBlogService _blogService = blogservice;
         private readonly IUserService _userService = userService;
         private readonly IConfiguration _configuration = configuration;
+        private readonly ICountryService _countryService = countryService;
 
         [HttpGet]
         [AllowAnonymous]
@@ -25,10 +26,10 @@ namespace Travelblog.Api.Controllers
                 {
                     Id = blog.Id,
                     User_Name = _userService.GetById(blog.User_Id).UserName,
-                    Creator_Id = _userService.GetById(blog.User_Id).IdString,
                     Name = blog.Name,
                     Description = blog.Description,
                     Posted_On = blog.StartDate,
+                    Countries = blog.Countries,
                     likes = blog.Likes,
                     liked = IdString != null ? _blogService.Liked(blog, _userService.GetUserById(IdString)) : false,
                 })
@@ -117,12 +118,20 @@ namespace Travelblog.Api.Controllers
                 return BadRequest("Invalid input");
             }
 
+            var countries = new List<Country>();
+
+            foreach (var country in updatedBlog.Countries)
+            {
+                countries.Add(await _countryService.GetCountryById(country));
+            }
+
             found.Name = updatedBlog.Name;
             found.Description = updatedBlog.Description;
             found.IsSuspended = updatedBlog.IsSuspended;
             found.IsDeleted = updatedBlog.IsDeleted;
             found.IsPrive = updatedBlog.IsPrive;
             found.Trip_Id = updatedBlog.Trip_Id;
+            found.Countries = countries;
 
             await _blogService.UpdateBlog(found);
             return NoContent();
