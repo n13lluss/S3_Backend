@@ -61,6 +61,6 @@
         #                 server-dir: '/domains/i427798.luna.fhict.nl/'
         #                 port: 21
         #                 protocol: ftps
-                        local-dir: publish/runtimes/win-x64/
+                        # local-dir: publish/runtimes/win-x64/
 
 
