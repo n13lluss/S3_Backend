@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Travelblog.Api.Models.BlogDto;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
@@ -8,13 +12,23 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService, ICountryService countryService) : ControllerBase
+    [AllowAnonymous]
+    public class BlogController : ControllerBase
     {
-        private readonly IBlogService _blogService = blogservice;
-        private readonly IUserService _userService = userService;
-        private readonly IConfiguration _configuration = configuration;
-        private readonly ICountryService _countryService = countryService;
+        private readonly IBlogService _blogService;
+        private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
+        private readonly ICountryService _countryService;
+        private readonly IHubContext<BlogHub> _hubContext;
+
+            public BlogController(IConfiguration configuration, IBlogService blogService, IUserService userService, ICountryService countryService, IHubContext<BlogHub> hubContext)
+        {
+            _blogService = blogService;
+            _userService = userService;
+            _configuration = configuration;
+            _countryService = countryService;
+            _hubContext = hubContext;
+        }
 
         [HttpGet]
         [AllowAnonymous]
@@ -37,7 +51,6 @@ namespace Travelblog.Api.Controllers
 
             return Ok(smallBlogs);
         }
-
 
         [HttpGet("{id}")]
         [AllowAnonymous]
@@ -77,30 +90,30 @@ namespace Travelblog.Api.Controllers
             return Ok(blogViewDto);
         }
 
-
         [HttpPost]
-        public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
+        public async Task<IActionResult> Create([FromBody] BlogCreationDto createdBlog)
         {
-            if (CreatedBlog == null)
+            if (createdBlog == null)
             {
                 return BadRequest("Invalid input");
             }
 
             // Adding default user information
-            User DefaultUser = new();
-            _configuration.GetSection("DefaultUser").Bind(DefaultUser);
+            User defaultUser = new();
+            _configuration.GetSection("DefaultUser").Bind(defaultUser);
             //
 
             Blog newBlog = new()
             {
-                User_Id = _userService.GetUserByName(CreatedBlog.Username).Id,
-                Name = CreatedBlog.Name,
-                Description = CreatedBlog.Description,
+                User_Id = _userService.GetUserByName(createdBlog.Username).Id,
+                Name = createdBlog.Name,
+                Description = createdBlog.Description,
                 StartDate = DateTime.UtcNow
             };
 
-            Blog createdBlog = _blogService.CreateBlog(newBlog);
-            return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
+            Blog created = await _blogService.CreateBlog(newBlog);
+
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
 
         [HttpPut("{id}")]
@@ -134,11 +147,12 @@ namespace Travelblog.Api.Controllers
             found.Countries = countries;
 
             await _blogService.UpdateBlog(found);
+
             return NoContent();
         }
 
         [HttpPost("{id}/like")]
-        public async Task<IActionResult> Like(int id, [FromBody] string IdString)
+        public async Task<IActionResult> Like(int id, [FromBody] string username)
         {
             Blog found = await _blogService.GetBlogById(id);
 
@@ -146,9 +160,13 @@ namespace Travelblog.Api.Controllers
             {
                 return NotFound();
             }
-            _blogService.LikeBlog(found, _userService.GetUserById(IdString));
+            _blogService.LikeBlog(found, _userService.GetUserById(username));
+
+            await _hubContext.Clients.All.SendAsync("ReceiveBlogUpdate", "A blog has been liked.");
+
             return NoContent();
         }
+
 
         [HttpPost("{id}/follow")]
         public async Task<IActionResult> Follow(int id, [FromBody] string IdString)
@@ -159,6 +177,7 @@ namespace Travelblog.Api.Controllers
             {
                 return NotFound();
             }
+
             _blogService.AddFollower(found, _userService.GetUserById(IdString));
             return NoContent();
         }
@@ -173,7 +192,8 @@ namespace Travelblog.Api.Controllers
             {
                 return NotFound();
             }
-            Blog blog = await  _blogService.AddCountries(found, countries);
+
+            Blog blog = await _blogService.AddCountries(found, countries);
             return NoContent();
         }
 
@@ -187,14 +207,7 @@ namespace Travelblog.Api.Controllers
                 return NotFound();
             }
 
-            if (existingBlog.IsDeleted)
-            {
-                existingBlog.IsDeleted = false;
-            }
-            else
-            {
-                existingBlog.IsDeleted = true;
-            }
+            existingBlog.IsDeleted = !existingBlog.IsDeleted;
 
             await _blogService.UpdateBlog(existingBlog);
             return NoContent();

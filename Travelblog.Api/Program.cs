@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using Travelblog.Api.Controllers;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Services;
 using Travelblog.Dal;
@@ -12,22 +13,24 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", builder =>
-    {
-        builder.WithOrigins("http://localhost:3000", "https://travelblog-n13lluss.netlify.app")
-               .AllowAnyHeader()
-               .AllowAnyMethod();
-    });
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
 
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("https://localhost:7170")
-               .AllowAnyHeader()
-               .WithMethods("GET");
-    });
+    options.AddPolicy("SignalRPolicy",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:3000") // Update with your SignalR client origin
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
+        });
 });
 
 var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
@@ -42,6 +45,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = ClaimTypes.NameIdentifier
         };
     });
+
+// Register SignalR services
+builder.Services.AddSignalR();
 
 // Register services
 builder.Services.AddScoped<IBlogService, BlogService>();
@@ -78,14 +84,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");
-app.UseCors("AllowFrontend");
 app.UseRouting();
+app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
+    endpoints.MapHub<BlogHub>("/blogHub").RequireCors("SignalRPolicy");
 });
 app.MapControllers();
 app.Run();

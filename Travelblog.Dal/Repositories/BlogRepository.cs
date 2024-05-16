@@ -17,7 +17,7 @@ namespace Travelblog.Dal.Repositories
             return result;
         }
 
-        public Blog Create(Blog blog)
+        public Task<Blog> Create(Blog blog)
         {
             var blogEntity = new Entities.Blog
             {
@@ -37,7 +37,7 @@ namespace Travelblog.Dal.Repositories
             try
             {
                 _dbContext.SaveChanges();
-                return MapEntityToCoreModel(blogEntity);
+               return Task.FromResult(MapEntityToCoreModel(blogEntity));
             }
             catch (DbUpdateException ex)
             {
@@ -159,5 +159,17 @@ namespace Travelblog.Dal.Repositories
                 : null;
         }
 
+        public async Task<int> BlogsCreatedToday(string StringId)
+        {
+            //DateTime today = DateTime.Today;
+
+            //var count = await _dbContext.Blogs
+            //    .Include(blog => blog.Creator)
+            //    .Where(blog => blog.StartDate.Date == today && blog.Creator.IdString == StringId)
+            //    .CountAsync();
+
+            //return count;
+            return 0;
+        }
     }
 }

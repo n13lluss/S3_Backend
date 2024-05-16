@@ -24,7 +24,7 @@ namespace Travelblog.Unittest
 
             // Configure the mock to return the input post when CreatePostAsync is called
             postRepositoryMock.Setup(repo => repo.CreatePostAsync(It.IsAny<Post>(), It.IsAny<int>()))
-                             .Returns((Post createdPost, int id) => createdPost);
+                             .ReturnsAsync((Post createdPost, int id) => createdPost);
 
             // Act
             var result = await postService.CreatePostAsync(inputPost, blogId);

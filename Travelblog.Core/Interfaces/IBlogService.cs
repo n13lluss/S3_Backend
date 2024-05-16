@@ -4,7 +4,7 @@ namespace Travelblog.Core.Interfaces
 {
     public interface IBlogService
     {
-        public Blog CreateBlog(Blog blog);
+        public Task<Blog> CreateBlog(Blog blog);
         public Task<Blog> UpdateBlog(Blog blog);
         public Task<List<Blog>> GetBlogList();
         public Task<Blog> GetBlogById(int id);

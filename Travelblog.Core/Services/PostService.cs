@@ -15,9 +15,14 @@ namespace Travelblog.Core.Services
                 throw new ArgumentException("Invalid post");
             }
 
+            if (await _postRepository.PostsCreatedToday(blogId) >= 5)
+            {
+                throw new Exception("Unable to make post because of limit");
+            }
+
             try
             {
-                Post createdPost = _postRepository.CreatePostAsync(post, blogId);
+                Post createdPost = await _postRepository.CreatePostAsync(post, blogId);
 
                 return createdPost ?? throw new Exception("Error creating post");
             }
@@ -26,6 +31,7 @@ namespace Travelblog.Core.Services
                 throw new Exception("Unable to create post", ex);
             }
         }
+
 
         public async Task<Post> DeletePostAsync(Post post)
         {

@@ -1,15 +1,17 @@
-﻿using Travelblog.Core.Interfaces;
+﻿using System.ComponentModel.DataAnnotations;
+using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Services
 {
-    public class BlogService(IBlogRepository blogRepository, IBlogLikeRepository blogLikeRepository, IBlogCountryRepository blogCountryRepository) : IBlogService
+    public class BlogService(IBlogRepository blogRepository, IBlogLikeRepository blogLikeRepository, IBlogCountryRepository blogCountryRepository, IUserRepository userRepository) : IBlogService
     {
         private readonly IBlogRepository _blogrepository = blogRepository;
         private readonly IBlogCountryRepository _blogCountryRepository = blogCountryRepository;
         private readonly IBlogLikeRepository _blogLikeRepository = blogLikeRepository;
+        private readonly IUserRepository _userRepository = userRepository;
 
-        public Blog CreateBlog(Blog blog)
+        public async Task<Blog> CreateBlog(Blog blog)
         {
             if (blog == null)
             {
@@ -23,7 +25,7 @@ namespace Travelblog.Core.Services
 
             try
             {
-                return _blogrepository.Create(blog);
+                return await _blogrepository.Create(blog);
             }
             catch (Exception ex)
             {
