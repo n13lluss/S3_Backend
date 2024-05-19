@@ -53,14 +53,14 @@ jobs:
 
       - name: Collect code coverage and run tests
         run: |
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage"
-          reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory ./TestResults
+          reportgenerator -reports:./TestResults/**/coverage.cobertura.xml -targetdir:./TestResults/Coverage -reporttypes:Html
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
           name: code-coverage
-          path: coverage/
+          path: ./TestResults/Coverage
 
   sonarcloud:
     runs-on: ubuntu-latest
@@ -94,6 +94,6 @@ jobs:
 
       - name: Run SonarCloud analysis
         run: |
-          dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
+          dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
           dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
-          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
