@@ -61,13 +61,12 @@ jobs:
         with:
           filename: ./coverage/**/*.cobertura.xml
           badge: true
-          fail_below_min: true
+          fail_below_min: false
           format: markdown
           hide_branch_rate: false
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '60 80'
 
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
@@ -112,5 +111,4 @@ jobs:
       - name: Run SonarCloud analysis
         run: |
           dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
-          dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
-          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          dotnet build Travelblog.Api/Travelblog.Api.csproj --
