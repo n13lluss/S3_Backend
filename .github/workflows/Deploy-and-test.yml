@@ -1,55 +1,45 @@
-name: CI/CD Pipeline
+name: .NET Deployment
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - master
-    types: [opened, synchronize, reopened]
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+      - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
       - name: Restore dependencies
         run: dotnet restore TravelblogBackend.sln
-
-      - name: Build solution
-        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0
+      - name: Ensure publish directory exists
+        run: mkdir -p publish/
+      - name: Build Release
+        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
 
   test:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
       - name: Restore dependencies
         run: dotnet restore TravelblogBackend.sln
-
+      - name: Install Coverlet tool
+        run: dotnet tool install --global coverlet.console
       - name: Test with coverage
         run: |
-          dotnet tool install --global coverlet.console
-          dotnet test Travelblog.Core/Travelblog.Core.Tests/Travelblog.Core.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
-          coverlet ./Travelblog.Core/Travelblog.Core.Tests/bin/Debug/net8.0/Travelblog.Core.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results" --format "opencover" --output "coverage.opencover.xml"
-
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
+          coverlet ./Travelblog.Unittest/Travelblog.Tests/bin/Debug/net8.0/Travelblog.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results" --format "opencover" --output "coverage.opencover.xml"
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
@@ -60,52 +50,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+      - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
       - name: Setup JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: 17
           distribution: 'zulu'
-
       - name: Download code coverage
         uses: actions/download-artifact@v3
         with:
           name: code-coverage
           path: coverage.opencover.xml
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache SonarCloud scanner
-        id: cache-sonar-scanner
-        uses: actions/cache@v3
-        with:
-          path: ./.sonar/scanner
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
-
       - name: Install SonarCloud scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: dotnet tool install --global dotnet-sonarscanner
-
       - name: Setup SonarCloud
         run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.opencover.xml
-
       - name: Build for SonarCloud
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
-
       - name: Complete SonarCloud analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
