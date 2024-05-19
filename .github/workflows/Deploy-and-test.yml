@@ -95,15 +95,13 @@ jobs:
       - name: Complete SonarCloud analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      - name: SonarCloud Quality Gate
-        id: sonar-quality-gate
-        uses: sonarsource/sonarcloud-github-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          sonar_token: ${{ secrets.SONAR_TOKEN }}
+      - name: Check Quality Gate status
+        id: quality-gate-status
+        run: |
+          STATUS=$(curl -s -u ${SONAR_TOKEN}: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=semester-3_backend" | jq -r .projectStatus.status)
+          echo "QUALITY_GATE_STATUS=$STATUS" >> $GITHUB_ENV
 
       - name: Post SonarCloud Quality Gate result as a comment
-        if: always()
         uses: actions/github-script@v6
         with:
           script: |
@@ -119,12 +117,7 @@ jobs:
             const body = `### SonarCloud Quality Gate Result\n\n` +
               `| Metric | Status |\n` +
               `|--------|--------|\n` +
-              `| Quality Gate | \`${{ steps.sonar-quality-gate.outputs.quality_gate_status }}\` |\n` +
-              `| Bugs | \`${{ steps.sonar-quality-gate.outputs.bugs }}\` |\n` +
-              `| Vulnerabilities | \`${{ steps.sonar-quality-gate.outputs.vulnerabilities }}\` |\n` +
-              `| Code Smells | \`${{ steps.sonar-quality-gate.outputs.code_smells }}\` |\n` +
-              `| Coverage | \`${{ steps.sonar-quality-gate.outputs.coverage }}%\` |\n` +
-              `| Duplications | \`${{ steps.sonar-quality-gate.outputs.duplicated_lines_density }}%\` |\n`;
+              `| Quality Gate | \`${{ env.QUALITY_GATE_STATUS }}\` |\n`;
 
             const existingComment = comments.find(comment => comment.user.login === "github-actions[bot]" && comment.body.includes("### SonarCloud Quality Gate Result"));
 
@@ -143,3 +136,4 @@ jobs:
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
