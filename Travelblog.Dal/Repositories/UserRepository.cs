@@ -9,10 +9,11 @@ namespace Travelblog.Dal.Repositories
 
         public User CreateUser(User user)
         {
-            Entities.User userEntity = new Entities.User()
+            Entities.User userEntity = new()
             {
                 Username = user.UserName,
                 Password = user.Password,
+                IdString = user.IdString,
                 Email = user.Email,
                 Suspended = user.Suspended,
                 Deleted = false,
@@ -58,11 +59,33 @@ namespace Travelblog.Dal.Repositories
                 {
                     Id = user.Id,
                     UserName = user.Username,
-                    Email = user.Email
+                    Email = user.Email,
+                    IdString = user.IdString
+
                 };
             }
 
             return new Core.Models.User();
+        }
+
+        public User GetById(string IdString)
+        {
+            try
+            {
+                var response = _dbContext.Users.FirstOrDefault(u => u.IdString == IdString);
+                User user = new User()
+                {
+                    Id = response.Id,
+                    UserName = response.Username,
+                    Email = response.Email,
+                    IdString = response.IdString
+                };
+                return user;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public User GetByUserName(string userName)

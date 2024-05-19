@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Travelblog.Core.Models;
+﻿using Travelblog.Core.Models;
 
 namespace Travelblog.Core.Interfaces
 {
@@ -11,5 +9,6 @@ namespace Travelblog.Core.Interfaces
         Task<Post> CreatePostAsync(Post post, int blogid);
         Task<Post> UpdatePostAsync(Post post);
         Task<Post> DeletePostAsync(int id);
+        Task<int> PostsCreatedToday(int BlogId);
     }
 }

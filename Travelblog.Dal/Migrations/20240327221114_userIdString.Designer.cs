@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Travelblog.Dal;
 
@@ -11,9 +12,11 @@ using Travelblog.Dal;
 namespace Travelblog.Dal.Migrations
 {
     [DbContext(typeof(TravelBlogDbContext))]
-    partial class TravelBlogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240327221114_userIdString")]
+    partial class userIdString
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

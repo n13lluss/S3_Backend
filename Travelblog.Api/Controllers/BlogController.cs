@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,26 +13,37 @@ namespace Travelblog.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class BlogController(IConfiguration configuration, IBlogService blogservice, IUserService userService) : ControllerBase
+    public class BlogController : ControllerBase
     {
-        private readonly IBlogService _blogService = blogservice;
-        private readonly IUserService _userService = userService;
-        private readonly IConfiguration _configuration = configuration;
+        private readonly IBlogService _blogService;
+        private readonly IUserService _userService;
+        private readonly ICountryService _countryService;
+        private readonly IHubContext<BlogHub> _hubContext;
+
+            public BlogController(IBlogService blogService, IUserService userService, ICountryService countryService, IHubContext<BlogHub> hubContext)
+        {
+            _blogService = blogService;
+            _userService = userService;
+            _countryService = countryService;
+            _hubContext = hubContext;
+        }
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string? IdString)
         {
             List<BlogSlimDTO> smallBlogs = (await _blogService.GetBlogList())
                 .Where(blog => !blog.IsDeleted)
                 .Select(blog => new BlogSlimDTO
                 {
                     Id = blog.Id,
-                    User_Name = _userService.GetNameById(blog.User_Id),
+                    User_Name = _userService.GetById(blog.User_Id).UserName,
                     Name = blog.Name,
                     Description = blog.Description,
                     Posted_On = blog.StartDate,
+                    Countries = blog.Countries,
                     likes = blog.Likes,
+                    liked = IdString != null ? _blogService.Liked(blog, _userService.GetUserById(IdString)) : false,
                 })
                 .ToList();
 
@@ -41,7 +52,7 @@ namespace Travelblog.Api.Controllers
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(int id, string? IdString)
         {
             Blog blog = await _blogService.GetBlogById(id);
 
@@ -50,14 +61,22 @@ namespace Travelblog.Api.Controllers
                 return NotFound();
             }
 
+            bool liked = false;
+            if (IdString != null)
+            {
+                liked = _blogService.Liked(blog, _userService.GetUserById(IdString));
+            }
+
             BlogViewDto blogViewDto = new()
             {
                 Id = blog.Id,
                 User_Name = _userService.GetNameById(blog.User_Id),
                 Name = blog.Name,
+                Creator_Id = _userService.GetById(blog.User_Id).IdString,
                 Description = blog.Description,
                 StartDate = blog.StartDate,
                 Likes = blog.Likes,
+                Liked = liked,
                 Posts = blog.Posts,
                 Followers = blog.Followers.Count,
                 IsDeleted = blog.IsDeleted,
@@ -70,33 +89,27 @@ namespace Travelblog.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize]
-        public IActionResult Create([FromBody] BlogCreationDto CreatedBlog)
+        public async Task<IActionResult> Create([FromBody] BlogCreationDto createdBlog)
         {
-            if (CreatedBlog == null)
+            if (createdBlog == null)
             {
                 return BadRequest("Invalid input");
             }
 
-            // Adding default user information
-            User DefaultUser = new();
-            _configuration.GetSection("DefaultUser").Bind(DefaultUser);
-            //
-
             Blog newBlog = new()
             {
-                User_Id = DefaultUser.Id,
-                Name = CreatedBlog.Name,
-                Description = CreatedBlog.Description,
+                User_Id = _userService.GetUserByName(createdBlog.Username).Id,
+                Name = createdBlog.Name,
+                Description = createdBlog.Description,
                 StartDate = DateTime.UtcNow
             };
 
-            Blog createdBlog = _blogService.CreateBlog(newBlog);
-            return CreatedAtAction(nameof(Get), new { id = createdBlog.Id }, createdBlog);
+            Blog created = await _blogService.CreateBlog(newBlog);
+
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
 
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> Put(int id, [FromBody] UpdateBlogDto updatedBlog)
         {
             Blog found = await _blogService.GetBlogById(id);
@@ -111,19 +124,73 @@ namespace Travelblog.Api.Controllers
                 return BadRequest("Invalid input");
             }
 
+            var countries = new List<Country>();
+
+            foreach (var country in updatedBlog.Countries)
+            {
+                countries.Add(await _countryService.GetCountryById(country));
+            }
+
             found.Name = updatedBlog.Name;
             found.Description = updatedBlog.Description;
             found.IsSuspended = updatedBlog.IsSuspended;
             found.IsDeleted = updatedBlog.IsDeleted;
             found.IsPrive = updatedBlog.IsPrive;
             found.Trip_Id = updatedBlog.Trip_Id;
+            found.Countries = countries;
 
             await _blogService.UpdateBlog(found);
+
+            return NoContent();
+        }
+
+        [HttpPost("{id}/like")]
+        public async Task<IActionResult> Like(int id, [FromBody] string username)
+        {
+            Blog found = await _blogService.GetBlogById(id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+            _blogService.LikeBlog(found, _userService.GetUserById(username));
+
+            await _hubContext.Clients.All.SendAsync("ReceiveBlogUpdate", "A blog has been liked.");
+
+            return NoContent();
+        }
+
+
+        [HttpPost("{id}/follow")]
+        public async Task<IActionResult> Follow(int id, [FromBody] string IdString)
+        {
+            Blog found = await _blogService.GetBlogById(id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+
+            _blogService.AddFollower(found, _userService.GetUserById(IdString));
+            return NoContent();
+        }
+
+        [HttpPost("{Id}/country")]
+        [AllowAnonymous]
+        public async Task<IActionResult> AddCountry(int Id, [FromBody] List<Country> countries)
+        {
+            Blog found = await _blogService.GetBlogById(Id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+
+            Blog blog = await _blogService.AddCountries(found, countries);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             Blog existingBlog = await _blogService.GetBlogById(id);
@@ -133,14 +200,7 @@ namespace Travelblog.Api.Controllers
                 return NotFound();
             }
 
-            if (existingBlog.IsDeleted)
-            {
-                existingBlog.IsDeleted = false;
-            }
-            else
-            {
-                existingBlog.IsDeleted = true;
-            }
+            existingBlog.IsDeleted = !existingBlog.IsDeleted;
 
             await _blogService.UpdateBlog(existingBlog);
             return NoContent();

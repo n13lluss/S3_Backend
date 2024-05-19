@@ -1,9 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using System.Drawing;
 using Travelblog.Core.Interfaces;
-using Travelblog.Core.Models;
-using Travelblog.Dal.Entities;
 using Blog = Travelblog.Core.Models.Blog;
 
 namespace Travelblog.Dal.Repositories
@@ -16,12 +12,12 @@ namespace Travelblog.Dal.Repositories
 
         public async Task<List<Blog>> GetAll()
         {
-            var blogs = await _dbContext.Blogs.ToListAsync();
+            var blogs = await _dbContext.Blogs.Where(b => !b.Deleted && !b.Suspended && !b.Prive && !b.Creator.Deleted && !b.Creator.Suspended).ToListAsync();
             List<Blog> result = blogs.Select(blog => MapEntityToCoreModel(blog)).ToList();
             return result;
         }
 
-        public Blog Create(Blog blog)
+        public Task<Blog> Create(Blog blog)
         {
             var blogEntity = new Entities.Blog
             {
@@ -33,7 +29,7 @@ namespace Travelblog.Dal.Repositories
                 Prive = blog.IsPrive,
                 Suspended = blog.IsSuspended,
                 Deleted = blog.IsDeleted,
-                TripId = null
+                TripId = null,
             };
 
             _dbContext.Blogs.Add(blogEntity);
@@ -41,7 +37,7 @@ namespace Travelblog.Dal.Repositories
             try
             {
                 _dbContext.SaveChanges();
-                return MapEntityToCoreModel(blogEntity);
+               return Task.FromResult(MapEntityToCoreModel(blogEntity));
             }
             catch (DbUpdateException ex)
             {
@@ -67,6 +63,17 @@ namespace Travelblog.Dal.Repositories
                     existingBlogEntity.Deleted = blog.IsDeleted;
                     existingBlogEntity.Description = blog.Description;
                     existingBlogEntity.TripId = null;
+
+                    _dbContext.BlogCountries.RemoveRange(_dbContext.BlogCountries.Where(bc => bc.BlogId == blog.Id));
+
+                    foreach (Core.Models.Country country in blog.Countries)
+                    {
+                        _dbContext.BlogCountries.Add(new Entities.BlogCountry
+                        {
+                            BlogId = blog.Id,
+                            CountryId = country.Id
+                        });
+                    }
 
                     if (blog.IsDeleted == true)
                     {
@@ -108,8 +115,20 @@ namespace Travelblog.Dal.Repositories
             {
                 var blogEntity = _dbContext.Blogs.FirstOrDefault(blog => blog.Id == id);
                 Blog found = MapEntityToCoreModel(blogEntity);
+                if(found == null)
+                {
+                    return null;
+                }
+                //returns posts
                 found.Posts = await _blogPostRepository.GetAllBlogPostsAsync(id);
                 found.Posts = [.. found.Posts.OrderBy(post => post.Posted)];
+                //returns countries
+                found.Countries = _dbContext.BlogCountries.Where(bc => bc.BlogId == id).Select(bc => new Core.Models.Country
+                {
+                    Id = bc.CountryId,
+                    Name = bc.Country.Name,
+                    Continent = bc.Country.Continent
+                }).ToList();
                 await transaction.CommitAsync();
                 return found;
             }
@@ -122,7 +141,7 @@ namespace Travelblog.Dal.Repositories
 
 
 
-        private static Blog MapEntityToCoreModel(Entities.Blog entity)
+        private static Blog? MapEntityToCoreModel(Entities.Blog entity)
         {
             return entity != null
                 ? new Blog
@@ -137,8 +156,20 @@ namespace Travelblog.Dal.Repositories
                     IsSuspended = entity.Suspended,
                     IsDeleted = entity.Deleted
                 }
-                : new Blog();
+                : null;
         }
 
+        public async Task<int> BlogsCreatedToday(string StringId)
+        {
+            //DateTime today = DateTime.Today;
+
+            //var count = await _dbContext.Blogs
+            //    .Include(blog => blog.Creator)
+            //    .Where(blog => blog.StartDate.Date == today && blog.Creator.IdString == StringId)
+            //    .CountAsync();
+
+            //return count;
+            return 0;
+        }
     }
 }

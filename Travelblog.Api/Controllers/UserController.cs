@@ -8,32 +8,31 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IAuthService _authService;
 
-        public UserController(IAuthService authService, IUserService userService)
+        public UserController(IUserService userService)
         {
-            _authService = authService;
             _userService = userService;
         }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public IActionResult Register([FromBody] UserRegisterDto userRegister)
-        {
+            {
             if (userRegister == null)
             {
-                return BadRequest("Invalid input. Please provide valid registration details.");
+                //BadRequest("Invalid input. Please provide valid registration details.");
+                return NoContent();
             }
 
             User user = new()
             {
                 UserName = userRegister.Name,
                 Email = userRegister.Email,
-                Password = userRegister.Password
+                IdString = userRegister.IdString,
+                Password = ""
             };
 
             try
@@ -48,38 +47,7 @@ namespace Travelblog.Api.Controllers
                 // Register the user
                 _userService.RegisterUser(user);
 
-                // Generate JWT token for the newly registered user
-                var token = _authService.GenerateJwtToken(userRegister.Email);
-
-                return Ok(new { Token = token });
-            }
-            catch
-            {
-                return StatusCode(500, "An error occurred while processing the request. Please try again later.");
-            }
-        }
-
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public IActionResult Login([FromBody] UserDto userLogin)
-        {
-            if (userLogin == null)
-            {
-                return BadRequest("Invalid input. Please provide valid credentials.");
-            }
-
-            try
-            {
-                var isValidUser = _userService.CheckUser(userLogin.UsernameEmail, userLogin.Password);
-
-                if (!isValidUser)
-                {
-                    return Unauthorized("Invalid credentials. Please check your username/email and password.");
-                }
-
-                var token = _authService.GenerateJwtToken(userLogin.UsernameEmail);
-
-                return Ok(new { Token = token });
+                return Ok();
             }
             catch
             {

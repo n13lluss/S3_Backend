@@ -1,14 +1,9 @@
 ﻿using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 using Travelblog.Core.Services;
 
-namespace Travelblog.Unittest
+namespace Travelblog.Tests
 {
     public class BlogTests
     {
@@ -17,7 +12,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var inputBlog = new Blog
             {
@@ -25,27 +23,40 @@ namespace Travelblog.Unittest
                 Description = "Test Description"
             };
 
+            var expectedBlog = new Blog
+            {
+                // Set properties of the expected blog based on what you expect the service to return
+                Name = inputBlog.Name,
+                Description = inputBlog.Description
+                // Add more properties as needed
+            };
+
+            // Setup mock to return the expected blog when Create method is called
             blogRepositoryMock.Setup(repo => repo.Create(It.IsAny<Blog>()))
-                             .Returns((Blog createdBlog) => createdBlog);
+                             .ReturnsAsync(expectedBlog);
 
             // Act
-            var result = blogService.CreateBlog(inputBlog);
+            var result = await blogService.CreateBlog(inputBlog);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(inputBlog.Name, result.Name);
-            Assert.Equal(inputBlog.Description, result.Description);
+            Assert.Equal(expectedBlog.Name, result.Name);
+            Assert.Equal(expectedBlog.Description, result.Description);
         }
+
 
         [Fact]
         public void CreateBlog_NullBlog_ThrowsArgumentNullException()
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             // Act and Assert
-            Assert.Throws<ArgumentNullException>(() => blogService.CreateBlog(null));
+            Assert.ThrowsAsync<ArgumentNullException>(() => blogService.CreateBlog(null));
         }
 
         [Fact]
@@ -53,7 +64,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var invalidBlog = new Blog
             {
@@ -62,7 +76,7 @@ namespace Travelblog.Unittest
             };
 
             // Act and Assert
-            Assert.Throws<ArgumentException>(() => blogService.CreateBlog(invalidBlog));
+            Assert.ThrowsAsync<ArgumentException>(() => blogService.CreateBlog(invalidBlog));
         }
 
         [Fact]
@@ -70,7 +84,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var existingBlog = new Blog
             {
@@ -103,7 +120,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             // Act and Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => blogService.UpdateBlog(null));
@@ -114,7 +134,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var invalidBlog = new Blog
             {
@@ -132,7 +155,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var existingBlog = new Blog
             {
@@ -167,7 +193,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             // Act and Assert
             await Assert.ThrowsAsync<Exception>(() => blogService.GetBlogById(-1));
@@ -178,7 +207,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             blogRepositoryMock.Setup(repo => repo.GetById(It.IsAny<int>()))
                              .ReturnsAsync((Blog)null);
@@ -194,7 +226,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             var blogs = new List<Blog>
                 {
@@ -218,7 +253,10 @@ namespace Travelblog.Unittest
         {
             // Arrange
             var blogRepositoryMock = new Mock<IBlogRepository>();
-            var blogService = new BlogService(blogRepositoryMock.Object);
+            var bloglikeRepositoryMock = new Mock<IBlogLikeRepository>();
+            var blogcountryRepositoryMock = new Mock<IBlogCountryRepository>();
+            var userRepositoryMock = new Mock<IUserRepository>();
+            var blogService = new BlogService(blogRepositoryMock.Object, bloglikeRepositoryMock.Object, blogcountryRepositoryMock.Object, userRepositoryMock.Object);
 
             blogRepositoryMock.Setup(repo => repo.GetAll())
                              .ReturnsAsync([]);

@@ -1,8 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 using Travelblog.Dal.Entities;
@@ -17,7 +13,11 @@ namespace Travelblog.Dal.Repositories
         public async Task<List<Core.Models.Post>> GetAllPostsByBlogIdAsync(int id)
         {
             var collected = await _dbContext.Posts.Where(p => p.TripId == id).ToListAsync();
-            return collected.Select(p => MapEntityToCoreModel(p)).ToList();
+            if (collected.Any())
+            {
+                return collected.Select(p => MapEntityToCoreModel(p)).ToList();
+            }
+            return new List<Core.Models.Post>();            
         }
 
         public async Task<Core.Models.Post> GetPostByIDAsync(int id)
@@ -28,7 +28,6 @@ namespace Travelblog.Dal.Repositories
 
         public async Task<Core.Models.Post> CreatePostAsync(Core.Models.Post post, int blogid)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 var postEntity = new Entities.Post
@@ -43,22 +42,33 @@ namespace Travelblog.Dal.Repositories
                     TripId = 3
                 };
 
+                // Save the post entity to the database
                 await _dbContext.Posts.AddAsync(postEntity);
                 await _dbContext.SaveChangesAsync();
 
-                await _blogPostRepository.CreateBlogPostAsync(postEntity.Id, blogid);
+                // Once the post is saved, create a BlogPost entry
+                BlogPost blogPost = new()
+                {
+                    BlogId = blogid,
+                    PostId = postEntity.Id
+                };
 
-                await transaction.CommitAsync();
+                // Add the BlogPost entry to the database
+                await _dbContext.BlogPosts.AddAsync(blogPost);
+                await _dbContext.SaveChangesAsync();
 
+                // Map the post entity to Core.Models.Post and return it
                 return MapEntityToCoreModel(postEntity);
             }
             catch (DbUpdateException ex)
             {
-                // Handle the exception (log, rethrow, or return null)
-                await transaction.RollbackAsync();
+                // Handle database update exception (log, rethrow, or return null)
                 return null;
             }
         }
+
+
+
 
         public async Task<Core.Models.Post> UpdatePostAsync(Core.Models.Post post)
         {
@@ -133,6 +143,20 @@ namespace Travelblog.Dal.Repositories
                     TripId = entity.TripId
                 }
                 : new Core.Models.Post();
+        }
+
+        public async Task<int> PostsCreatedToday(int blogId)
+        {
+            //var count = 0;
+            //var posts = await _blogPostRepository.GetAllBlogPostsAsync(blogId);
+            //foreach (Core.Models.Post post in posts)
+            //{
+            //    if(post.Posted == DateTime.Today)
+            //    {
+            //        count++;
+            //    }
+            //}
+            return 0;
         }
     }
 }

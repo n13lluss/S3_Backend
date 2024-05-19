@@ -1,14 +1,9 @@
 ﻿using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Travelblog.Core.Interfaces;
 using Travelblog.Core.Models;
 using Travelblog.Core.Services;
 
-namespace Travelblog.Unittest
+namespace Travelblog.Tests
 {
     public class PostTests
     {
@@ -27,10 +22,9 @@ namespace Travelblog.Unittest
                 Description = "Test Content"
             };
 
+            // Configure the mock to return the input post when CreatePostAsync is called
             postRepositoryMock.Setup(repo => repo.CreatePostAsync(It.IsAny<Post>(), It.IsAny<int>()))
                              .ReturnsAsync((Post createdPost, int id) => createdPost);
-
-            blogPostRepositoryMock.Setup(repo => repo.CreateBlogPostAsync(It.IsAny<int>(), It.IsAny<int>()));
 
             // Act
             var result = await postService.CreatePostAsync(inputPost, blogId);
@@ -40,6 +34,7 @@ namespace Travelblog.Unittest
             Assert.Equal(inputPost.Name, result.Name);
             Assert.Equal(inputPost.Description, result.Description);
         }
+
 
 
 

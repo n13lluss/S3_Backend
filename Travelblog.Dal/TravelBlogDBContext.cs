@@ -102,9 +102,8 @@ public partial class TravelBlogDbContext : DbContext
 
         modelBuilder.Entity<BlogCountry>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("Blog/Country");
+            entity.ToTable("Blog/Country");
+            entity.HasKey(e => e.Id);
 
             entity.Property(e => e.BlogId).HasColumnName("Blog_Id");
             entity.Property(e => e.CountryId).HasColumnName("Country_Id");
@@ -142,9 +141,11 @@ public partial class TravelBlogDbContext : DbContext
 
         modelBuilder.Entity<BlogLike>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("Blog/Like");
+            entity.ToTable("Blog/Like"); // Set the table name
+
+            entity.HasKey(e => e.Id); // Specify the primary key
+
+            entity.Property(e => e.Id).HasColumnName("Id"); // Map the Id property to the column Id
 
             entity.Property(e => e.BlogId).HasColumnName("Blog_Id");
             entity.Property(e => e.Date).HasColumnType("datetime");
@@ -160,6 +161,7 @@ public partial class TravelBlogDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Blog/Like_User");
         });
+
 
         modelBuilder.Entity<BlogPost>(entity =>
         {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Travelblog.Core.Interfaces;
 using Travelblog.Dal.Entities;
 
@@ -14,14 +10,15 @@ namespace Travelblog.Dal.Repositories
 
         public async Task CreateBlogPostAsync(int postId, int blogId)
         {
-            BlogPost blogPost = new()
+            BlogPost blogPost = new BlogPost
             {
                 PostId = postId,
                 BlogId = blogId
             };
-            _dbContext.BlogPosts.Add(blogPost);
-            await _dbContext.SaveChangesAsync();
+
+            await _dbContext.BlogPosts.AddAsync(blogPost);
         }
+
 
         public async Task<List<Core.Models.Post>> GetAllBlogPostsAsync(int BlogId)
         {
