@@ -28,9 +28,40 @@ jobs:
       - name: Build Release
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
 
-  sonarcloud:
+  test:
     runs-on: ubuntu-latest
     needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore TravelblogBackend.sln
+
+      - name: Install dotnet-coverage tool
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Add dotnet tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Collect code coverage and run tests
+        run: |
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage"
+          reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage/
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,18 +77,17 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Install dotnet-coverage tool
-        run: dotnet tool install --global dotnet-coverage
-
-      - name: Add dotnet tools to PATH
-        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+      - name: Download code coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage/
 
       - name: Install SonarCloud scanner
         run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Collect code coverage and run tests for SonarCloud
+      - name: Run SonarCloud analysis
         run: |
-          dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --no-incremental
-          dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj" -f xml -o "coverage.xml"
+          dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
+          dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
           dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
