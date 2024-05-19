@@ -1,4 +1,4 @@
-.github/workflows/dotnet.yml this is the path of this filename: .NET Deployment
+.NET Deployment
 
 on:
   push:
