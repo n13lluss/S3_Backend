@@ -34,18 +34,15 @@ jobs:
           dotnet-version: 8.0.x
       - name: Restore dependencies
         run: dotnet restore TravelblogBackend.sln
-      - name: Install Coverlet tool
-        run: dotnet tool install --global coverlet.console
       - name: Test with coverage
         run: |
-          mkdir -p /tmp/test-results
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results --logger "trx;LogFileName=test-results.trx"
-          coverlet ./Travelblog.Unittest/bin/Debug/net8.0/Travelblog.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results --logger 'trx;LogFileName=test-results.trx'" --format "opencover" --output "coverage.opencover.xml"
+          dotnet add Travelblog.Unittest/Travelblog.Tests.csproj package coverlet.collector
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
           name: code-coverage
-          path: coverage.opencover.xml
+          path: /tmp/test-results/*/coverage.cobertura.xml
 
   sonarcloud:
     runs-on: ubuntu-latest
@@ -65,11 +62,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: code-coverage
-          path: coverage.opencover.xml
+          path: /tmp/test-results/*/coverage.cobertura.xml
       - name: Install SonarCloud scanner
         run: dotnet tool install --global dotnet-sonarscanner
       - name: Setup SonarCloud
-        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.opencover.xml
+        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=/tmp/test-results/*/coverage.cobertura.xml
       - name: Build for SonarCloud
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
       - name: Complete SonarCloud analysis
