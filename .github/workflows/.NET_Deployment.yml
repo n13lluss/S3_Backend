@@ -2,9 +2,9 @@ name: .NET Tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
       - name: Collect code coverage and run tests
         run: |
           mkdir -p /tmp/test-results
-          dotnet-coverage collect --output /tmp/test-results/coverage.cobertura.xml --format cobertura -- dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage"
+          dotnet-coverage collect --output /tmp/test-results/coverage.cobertura.xml --output-format cobertura dotnet test Travelblog.Unittest/Travelblog.Tests.csproj
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
