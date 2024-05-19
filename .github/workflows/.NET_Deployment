@@ -1,5 +1,3 @@
-.NET Deployment
-
 on:
   push:
     branches: [ "main" ]
