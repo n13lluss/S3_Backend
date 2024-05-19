@@ -43,6 +43,8 @@ jobs:
 
     - name: Begin SonarCloud analysis
       run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage/coverage.cobertura.xml"
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Build solution for analysis
       run: dotnet build --no-restore --configuration Release Travelblog.Core/Travelblog.Core.csproj
