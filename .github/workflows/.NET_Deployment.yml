@@ -88,7 +88,13 @@ jobs:
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Setup SonarCloud
-        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=/tmp/test-results/coverage.cobertura.xml
+        run: |
+          dotnet sonarscanner begin \
+            /k:"semester-3_backend" \
+            /o:"semester-3" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths=/tmp/test-results/coverage.cobertura.xml
 
       - name: Build for SonarCloud
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
