@@ -45,12 +45,30 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore TravelblogBackend.sln
 
-      - name: Test
-        run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --verbosity normal
+      - name: Test with Coverage
+        run: |
+          dotnet test Travelblog.Core/Travelblog.Core.Tests/Travelblog.Core.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
+
+      - name: Report code coverage
+        run: |
+          dotnet tool install --global coverlet.console
+          coverlet ./Travelblog.Core/Travelblog.Core.Tests/bin/Debug/net8.0/Travelblog.Core.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results" --format "opencover" --output "coverage.opencover.xml"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: /tmp/test-results
+
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage.opencover.xml
 
   sonarcloud:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +84,18 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu'
+
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          name: test-results
+          path: /tmp/test-results
+
+      - name: Download code coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage.opencover.xml
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -87,7 +117,7 @@ jobs:
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Setup SonarCloud
-        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.opencover.xml
 
       - name: Run build (for SonarCloud)
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
@@ -114,10 +144,8 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const body = `### SonarCloud Quality Gate Result\n\n` +
-              `| Metric | Status |\n` +
-              `|--------|--------|\n` +
-              `| Quality Gate | \`${{ env.QUALITY_GATE_STATUS }}\` |\n`;
+            const body = `### SonarCloud Quality Gate Result\n` +
+              `**Quality Gate Status:** \`${{ env.QUALITY_GATE_STATUS }}\`\n`;
 
             const existingComment = comments.find(comment => comment.user.login === "github-actions[bot]" && comment.body.includes("### SonarCloud Quality Gate Result"));
 
