@@ -1,11 +1,10 @@
 name: .NET build, test, and coverage
 
 on:
-  push:
-    branches: ["master", "develop"]
   pull_request:
-    branches: ["master", "develop"]
-    types: [opened, synchronize, reopened]
+    branches: ["main", "develop"]
+  push:
+    branches: ["develop"]
 
 jobs:
   build:
@@ -24,71 +23,57 @@ jobs:
       - name: Build
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --no-restore
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Test
+        run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ./coverage
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      - name: Generate Coverage Report
+        run: reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
 
-      - name: Restore dependencies
-        run: dotnet restore TravelblogBackend.sln
-
-      - name: Install dotnet tools
-        run: |
-          dotnet tool install --global dotnet-coverage
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Add dotnet tools to PATH
-        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Collect code coverage and run tests
-        run: |
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --logger "trx;LogFileName=TestResults.trx" --results-directory ./coverage
-          reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
-      - name: Upload code coverage
+      - name: Upload Code Coverage
         uses: actions/upload-artifact@v3
         with:
           name: code-coverage
           path: ./coverage/CoverageReport
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: ./coverage/TestResults.trx
-
-  filter-test-results:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Download test results
-        uses: actions/download-artifact@v3
-        with:
-          name: test-results
-          path: ./coverage/
-
-      - name: Filter test results
+      - name: Filter and Report Test Results
         run: |
           dotnet tool install --global trx2html
           trx2html ./coverage/TestResults.trx --filter-namespace "Travelblog.Core.Services" --output ./coverage/FilteredTestResults.html
         env:
           PATH: ${{ runner.tool_cache }}/dotnet:${{ runner.tool_cache }}/dotnet/tools:$PATH
 
-      - name: Upload filtered test results
+      - name: Upload Filtered Test Results
         uses: actions/upload-artifact@v3
         with:
           name: filtered-test-results
           path: ./coverage/FilteredTestResults.html
 
+      - name: Code Coverage Summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./coverage/**/*.cobertura.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
+      - name: Write to Job Summary
+        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+
   sonarcloud:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
