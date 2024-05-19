@@ -1,53 +1,62 @@
-name: .NET SonarCloud Analysis
+name: .NET build, test, and coverage
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
-    branches:
-      - master
+    branches: [ "master", "Develop" ]
+  push:
+    branches: [ "Develop" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    - name: Install SonarScanner
-      run: dotnet tool install --global dotnet-sonarscanner
-
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore S3_Backend/Travelblog.sln
 
-    - name: Build project
-      run: dotnet build --no-restore --configuration Release
+    - name: Build
+      run: dotnet build S3_Backend/Travelblog.Api/Travelblog.Api.csproj --no-restore
 
-    - name: Run tests and generate code coverage
-      run: dotnet test --no-restore --configuration Release --collect:"XPlat Code Coverage"
+    - name: Test
+      run: dotnet test S3_Backend/Travelblog.Unittest/Travelblog.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ./coverage
 
-    - name: Create coverage directory
-      run: mkdir -p coverage
-
-    - name: Move coverage file
-      run: |
-        REPORT_PATH=$(find . -name 'coverage.cobertura.xml')
-        mv $REPORT_PATH coverage/
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: ./coverage/**/*.cobertura.xml
+        badge: true
+        fail_below_min: true
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '60 80'
+  
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+          recreate: true
+          path: code-coverage-results.md
+  
+    - name: Write to Job Summary
+      run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
 
     - name: Begin SonarCloud analysis
-      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage/coverage.cobertura.xml"
+      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="./coverage/coverage.cobertura.xml"
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Build solution for analysis
-      run: dotnet build --no-restore --configuration Release Travelblog.Core/Travelblog.Core.csproj
+      run: dotnet build --no-restore --configuration Release S3_Backend/Travelblog.Core/Travelblog.Core.csproj
 
     - name: End SonarCloud analysis
       run: dotnet sonarscanner end
