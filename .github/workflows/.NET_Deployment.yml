@@ -52,13 +52,13 @@ jobs:
       - name: Collect code coverage and run tests
         run: |
           mkdir -p /tmp/test-results
-          dotnet-coverage collect --output /tmp/test-results/coverage.cobertura.xml --output-format cobertura dotnet test Travelblog.Unittest/Travelblog.Tests.csproj
+          dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj" -f xml -o /tmp/test-results/coverage.xml
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
           name: code-coverage
-          path: /tmp/test-results/coverage.cobertura.xml
+          path: /tmp/test-results/coverage.xml
 
   sonarcloud:
     runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: code-coverage
-          path: /tmp/test-results/coverage.cobertura.xml
+          path: /tmp/test-results/coverage.xml
 
       - name: Install SonarCloud scanner
         run: dotnet tool install --global dotnet-sonarscanner
@@ -94,7 +94,7 @@ jobs:
             /o:"semester-3" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.opencover.reportsPaths=/tmp/test-results/coverage.cobertura.xml
+            /d:sonar.cs.vscoveragexml.reportsPaths=/tmp/test-results/coverage.xml
 
       - name: Build for SonarCloud
         run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
