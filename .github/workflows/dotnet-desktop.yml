@@ -1,0 +1,79 @@
+name: .NET Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore TravelblogBackend.sln
+      - name: Ensure publish directory exists
+        run: mkdir -p publish/
+      - name: Build Release
+        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore TravelblogBackend.sln
+      - name: Install dotnet-coverage tool
+        run: dotnet tool install --global dotnet-coverage
+      - name: Collect code coverage and run tests
+        run: |
+          mkdir -p /tmp/test-results
+          dotnet-coverage collect -o /tmp/test-results/coverage.cobertura.xml --format cobertura -- dotnet test Travelblog.Unittest/Travelblog.Tests.csproj
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: /tmp/test-results/coverage.cobertura.xml
+
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'zulu'
+      - name: Download code coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: code-coverage
+          path: /tmp/test-results/coverage.cobertura.xml
+      - name: Install SonarCloud scanner
+        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Setup SonarCloud
+        run: dotnet sonarscanner begin /k:"semester-3_backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=/tmp/test-results/coverage.cobertura.xml
+      - name: Build for SonarCloud
+        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
+      - name: Complete SonarCloud analysis
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
