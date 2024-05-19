@@ -26,6 +26,12 @@ jobs:
       - name: Test
         run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ./coverage
 
+      - name: Install reportgenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Add .NET tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+
       - name: Generate Coverage Report
         run: reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
 
@@ -35,9 +41,11 @@ jobs:
           name: code-coverage
           path: ./coverage/CoverageReport
 
+      - name: Install trx2html
+        run: dotnet tool install --global trx2html
+
       - name: Filter and Report Test Results
         run: |
-          dotnet tool install --global trx2html
           trx2html ./coverage/TestResults.trx --filter-namespace "Travelblog.Core.Services" --output ./coverage/FilteredTestResults.html
         env:
           PATH: ${{ runner.tool_cache }}/dotnet:${{ runner.tool_cache }}/dotnet/tools:$PATH
