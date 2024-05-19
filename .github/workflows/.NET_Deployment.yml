@@ -49,14 +49,42 @@ jobs:
 
       - name: Collect code coverage and run tests
         run: |
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --filter "FullyQualifiedName~Travelblog.Core.Services" --collect:"XPlat Code Coverage" --results-directory ./coverage
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --logger "trx;LogFileName=TestResults.trx" --results-directory ./coverage
           reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
-
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
           name: code-coverage
-          path: ./coverage
+          path: ./coverage/CoverageReport
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: ./coverage/TestResults.trx
+
+  filter-test-results:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          name: test-results
+          path: ./coverage/
+
+      - name: Filter test results
+        run: |
+          dotnet tool install --global trx2html
+          trx2html ./coverage/TestResults.trx --filter-namespace "Travelblog.Core.Services" --output ./coverage/FilteredTestResults.html
+        env:
+          PATH: ${{ runner.tool_cache }}/dotnet:${{ runner.tool_cache }}/dotnet/tools:$PATH
+
+      - name: Upload filtered test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: filtered-test-results
+          path: ./coverage/FilteredTestResults.html
 
   sonarcloud:
     runs-on: ubuntu-latest
@@ -93,40 +121,3 @@ jobs:
           dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
           dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
           dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-  code_coverage_summary:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download code coverage
-        uses: actions/download-artifact@v3
-        with:
-          name: code-coverage
-          path: coverage/
-
-      - name: Code Coverage Report
-        id: coverage
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: ./coverage/**/*.cobertura.xml
-          badge: true
-          fail_below_min: false  # Set to false to prevent failing the build
-          format: markdown
-          hide_branch_rate: false
-          hide_complexity: true
-          indicators: true
-          output: both
-          thresholds: '60 80'
-
-      - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
-        with:
-          recreate: true
-          path: code-coverage-results.md
-
-      - name: Write to Job Summary
-        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
