@@ -1,5 +1,3 @@
-name: .NET Deployment
-
 on:
   push:
     branches: [ "master" ]
@@ -47,7 +45,15 @@ jobs:
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          distribution: 'adopt'  # or 'zulu' or 'temurin' based on your preference
+          java-version: 11
+          java-package: jdk
+          architecture: x64
+          check-latest: false
+          server-id: github
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+          overwrite-settings: true
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v2
