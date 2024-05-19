@@ -1,4 +1,4 @@
-name: .NET Workflow
+name: .NET Tests
 
 on:
   push:
@@ -17,13 +17,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Install dependencies
-        run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore TravelblogBackend.sln
 
-      - name: Build project
-        run: dotnet build --no-incremental
+      - name: Ensure publish directory exists
+        run: mkdir -p publish/
+
+      - name: Build Release
+        run: dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --framework net8.0 --output publish/
 
   test:
     runs-on: ubuntu-latest
@@ -35,12 +38,31 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Run tests
-        run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --no-build
+      - name: Restore dependencies
+        run: dotnet restore TravelblogBackend.sln
 
-  coverage:
+      - name: Install dotnet-coverage tool
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Add dotnet tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Collect code coverage and run tests
+        run: |
+          mkdir -p /tmp/test-results
+          dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj" -f xml -o /tmp/test-results/coverage.xml
+      - name: Print code coverage file content
+        run: cat /tmp/test-results/coverage.xml
+
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: /tmp/test-results/coverage.xml
+
+  sonarcloud:
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -50,52 +72,26 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: '8.0.x'
 
-      - name: Install dotnet-coverage tool
-        run: dotnet tool install --global dotnet-coverage
-
-      - name: Collect code coverage
-        run: dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --no-build" -f xml -o "coverage.xml"
-
-      - name: Print coverage file
-        run: cat coverage.xml
-
-      - name: Upload code coverage
-        uses: actions/upload-artifact@v3
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3
         with:
-          name: code-coverage
-          path: coverage.xml
-
-  code_analysis:
-    runs-on: ubuntu-latest
-    needs: coverage
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-
-      - name: Install dotnet-sonarscanner
-        run: dotnet tool install --global dotnet-sonarscanner
+          java-version: '17'
+          distribution: 'zulu'
 
       - name: Download code coverage
         uses: actions/download-artifact@v3
         with:
           name: code-coverage
-          path: .
+          path: /tmp/test-results/coverage.xml
 
-      - name: SonarScanner begin
-        run: dotnet sonarscanner begin /k:"semester-3_backend" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+      - name: Install SonarCloud scanner
+        run: dotnet tool install --global dotnet-sonarscanner
 
-      - name: Build project
-        run: dotnet build --no-incremental
-
-      - name: Collect code coverage
-        run: dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --no-build" -f xml -o "coverage.xml"
-
-      - name: SonarScanner end
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      - name: Collect code coverage and run tests for SonarCloud
+        run: |
+          dotnet sonarscanner begin /k:"<sonar-project-key>" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths=/tmp/test-results/coverage.xml
+          dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release --no-incremental
+          dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj" -f xml -o "coverage.xml"
+          dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
