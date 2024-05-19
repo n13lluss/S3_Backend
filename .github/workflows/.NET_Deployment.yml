@@ -1,4 +1,4 @@
-name: CI
+name: .NET SonarCloud Analysis
 
 on:
   push:
@@ -13,37 +13,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v1
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: 8.0.x
 
-    - name: Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+    - name: Install SonarScanner
+      run: dotnet tool install --global dotnet-sonarscanner
 
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Run tests and generate code coverage report
-      run: dotnet test --collect:"XPlat Code Coverage" --results-directory:coverage
+    - name: Build project
+      run: dotnet build --no-restore --configuration Release
 
-    - name: Generate Cobertura report
-      run: reportgenerator -reports:coverage/*/coverage.cobertura.xml -targetdir:coverage -reporttypes:Cobertura
+    - name: Run tests and generate code coverage
+      run: dotnet test --no-restore --configuration Release --collect:"XPlat Code Coverage"
 
-    - name: SonarCloud Begin
+    - name: Create coverage directory
+      run: mkdir -p coverage
+
+    - name: Move coverage file
+      run: |
+        REPORT_PATH=$(find . -name 'coverage.cobertura.xml')
+        mv $REPORT_PATH coverage/
+
+    - name: Begin SonarCloud analysis
       run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage/coverage.cobertura.xml"
 
-    - name: Build project
-      run: dotnet build
+    - name: Build solution for analysis
+      run: dotnet build --no-restore --configuration Release Travelblog.Core/Travelblog.Core.csproj
 
-    - name: SonarCloud End
+    - name: End SonarCloud analysis
       run: dotnet sonarscanner end
-
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-report
-        path: coverage
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
