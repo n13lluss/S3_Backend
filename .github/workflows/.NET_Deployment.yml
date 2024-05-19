@@ -82,6 +82,12 @@ jobs:
       - name: Install dotnet-sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
 
+      - name: Download code coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: code-coverage
+          path: .
+
       - name: SonarScanner begin
         run: dotnet sonarscanner begin /k:"semester-3_backend" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
 
@@ -90,9 +96,3 @@ jobs:
 
       - name: SonarScanner end
         run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Download code coverage
-        uses: actions/download-artifact@v3
-        with:
-          name: code-coverage
-          path: .
