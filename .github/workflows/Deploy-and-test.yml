@@ -38,8 +38,9 @@ jobs:
         run: dotnet tool install --global coverlet.console
       - name: Test with coverage
         run: |
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
-          coverlet ./Travelblog.Unittest/Travelblog.Tests/bin/Debug/net8.0/Travelblog.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results" --format "opencover" --output "coverage.opencover.xml"
+          mkdir -p /tmp/test-results
+          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results --logger "trx;LogFileName=test-results.trx"
+          coverlet ./Travelblog.Unittest/bin/Debug/net8.0/Travelblog.Tests.dll --target "dotnet" --targetargs "test --no-build --results-directory /tmp/test-results --logger 'trx;LogFileName=test-results.trx'" --format "opencover" --output "coverage.opencover.xml"
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
