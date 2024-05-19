@@ -2,9 +2,9 @@ name: .NET build, test, and coverage
 
 on:
   pull_request:
-    branches: ["main", "develop"]
+    branches: ["master", "Develop"]
   push:
-    branches: ["develop"]
+    branches: ["master", "Develop"]
 
 jobs:
   build:
