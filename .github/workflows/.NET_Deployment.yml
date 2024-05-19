@@ -26,37 +26,7 @@ jobs:
       - name: Test
         run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ./coverage
 
-      - name: Install reportgenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Add .NET tools to PATH
-        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Generate Coverage Report
-        run: reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
-
-      - name: Upload Code Coverage
-        uses: actions/upload-artifact@v3
-        with:
-          name: code-coverage
-          path: ./coverage/CoverageReport
-
-      - name: Install trx2html
-        run: dotnet tool install --global trx2html
-
-      - name: Filter and Report Test Results
-        run: |
-          trx2html ./coverage/TestResults.trx --filter-namespace "Travelblog.Core.Services" --output ./coverage/FilteredTestResults.html
-        env:
-          PATH: ${{ runner.tool_cache }}/dotnet:${{ runner.tool_cache }}/dotnet/tools:$PATH
-
-      - name: Upload Filtered Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: filtered-test-results
-          path: ./coverage/FilteredTestResults.html
-
-      - name: Code Coverage Summary
+      - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: ./coverage/**/*.cobertura.xml
@@ -67,48 +37,13 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-
+  
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
         with:
           recreate: true
           path: code-coverage-results.md
-
+  
       - name: Write to Job Summary
         run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
-
-  sonarcloud:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Setup JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Download code coverage
-        uses: actions/download-artifact@v3
-        with:
-          name: code-coverage
-          path: coverage/
-
-      - name: Install SonarCloud scanner
-        run: dotnet tool install --global dotnet-sonarscanner
-
-      - name: Add dotnet tools to PATH
-        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Run SonarCloud analysis
-        run: |
-          dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
-          dotnet build Travelblog.Api/Travelblog.Api.csproj --
