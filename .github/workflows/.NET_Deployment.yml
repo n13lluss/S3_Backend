@@ -19,7 +19,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore S3_Backend/TravelblogBackend.sln
+      run: dotnet restore S3_Backend/Travelblog.sln
 
     - name: Build
       run: dotnet build S3_Backend/Travelblog.Api/Travelblog.Api.csproj --no-restore
@@ -51,12 +51,12 @@ jobs:
       run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
 
     - name: Begin SonarCloud analysis
-      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="./coverage/coverage.cobertura.xml"
+      run: dotnet sonarscanner begin /k:"<your-project-key>" /o:"<your-organization-key>" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="./coverage/coverage.cobertura.xml"
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     - name: Build solution for analysis
-      run: dotnet build --no-restore --configuration Release S3_Backend/Travelblog.Core/Travelblog.Core.csproj
+      run: dotnet build --no-restore --configuration Release S3_Backend/Travelblog.sln
 
     - name: End SonarCloud analysis
       run: dotnet sonarscanner end
