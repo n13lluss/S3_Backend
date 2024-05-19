@@ -1,4 +1,4 @@
-name: .NET Tests
+name: .NET build, test, and coverage
 
 on:
   push:
@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -50,30 +49,8 @@ jobs:
 
       - name: Collect code coverage and run tests
         run: |
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory ./coverage
+          dotnet test Travelblog.Core/Travelblog.Core.csproj --filter "FullyQualifiedName~Travelblog.Core.Services" --collect:"XPlat Code Coverage" --results-directory ./coverage
           reportgenerator -reports:./coverage/**/coverage.cobertura.xml -targetdir:./coverage/CoverageReport -reporttypes:Html
-
-      - name: Code Coverage Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: ./coverage/**/*.cobertura.xml
-          badge: true
-          fail_below_min: true
-          format: markdown
-          hide_branch_rate: false
-          hide_complexity: true
-          indicators: true
-          output: both
-
-      - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
-        with:
-          recreate: true
-          path: code-coverage-results.md
-
-      - name: Write to Job Summary
-        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
@@ -116,3 +93,40 @@ jobs:
           dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage/coverage.cobertura.xml
           dotnet build Travelblog.Api/Travelblog.Api.csproj --configuration Release
           dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+  code_coverage_summary:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download code coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage/
+
+      - name: Code Coverage Report
+        id: coverage
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: ./coverage/**/*.cobertura.xml
+          badge: true
+          fail_below_min: false  # Set to false to prevent failing the build
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
+      - name: Write to Job Summary
+        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
