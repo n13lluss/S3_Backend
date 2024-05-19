@@ -34,10 +34,10 @@ jobs:
           dotnet-version: 8.0.x
       - name: Restore dependencies
         run: dotnet restore TravelblogBackend.sln
+      - name: Install Coverlet collector
+        run: dotnet add Travelblog.Unittest/Travelblog.Tests.csproj package coverlet.collector
       - name: Test with coverage
-        run: |
-          dotnet add Travelblog.Unittest/Travelblog.Tests.csproj package coverlet.collector
-          dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
+        run: dotnet test Travelblog.Unittest/Travelblog.Tests.csproj --collect:"XPlat Code Coverage" --results-directory /tmp/test-results
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
