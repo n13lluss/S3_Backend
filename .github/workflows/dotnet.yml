@@ -1,4 +1,4 @@
-name: .NET Deployment
+.github/workflows/dotnet.yml this is the path of this filename: .NET Deployment
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: production
-    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    if: ${{ github.ref == 'refs/heads/main' || (github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'Develop') }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -28,7 +28,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    if: ${{ github.ref == 'refs/heads/main' || (github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop') }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -52,7 +52,7 @@ jobs:
   sonarcloud:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop'
+    if: ${{ github.ref == 'refs/heads/main' || (github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'develop') }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
