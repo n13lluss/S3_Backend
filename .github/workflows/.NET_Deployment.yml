@@ -54,6 +54,9 @@ jobs:
           mkdir -p /tmp/test-results
           dotnet-coverage collect "dotnet test Travelblog.Unittest/Travelblog.Tests.csproj" -f xml -o /tmp/test-results/coverage.xml
 
+      - name: Print code coverage file content
+        run: cat /tmp/test-results/coverage.xml
+
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
