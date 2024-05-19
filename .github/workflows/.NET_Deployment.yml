@@ -19,7 +19,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore S3_Backend/Travelblog.sln
+      run: dotnet restore S3_Backend/TravelblogBackend.sln
 
     - name: Build
       run: dotnet build S3_Backend/Travelblog.Api/Travelblog.Api.csproj --no-restore
