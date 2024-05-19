@@ -12,20 +12,18 @@ namespace Travelblog.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize]
     public class BlogController : ControllerBase
     {
         private readonly IBlogService _blogService;
         private readonly IUserService _userService;
-        private readonly IConfiguration _configuration;
         private readonly ICountryService _countryService;
         private readonly IHubContext<BlogHub> _hubContext;
 
-            public BlogController(IConfiguration configuration, IBlogService blogService, IUserService userService, ICountryService countryService, IHubContext<BlogHub> hubContext)
+            public BlogController(IBlogService blogService, IUserService userService, ICountryService countryService, IHubContext<BlogHub> hubContext)
         {
             _blogService = blogService;
             _userService = userService;
-            _configuration = configuration;
             _countryService = countryService;
             _hubContext = hubContext;
         }
@@ -97,11 +95,6 @@ namespace Travelblog.Api.Controllers
             {
                 return BadRequest("Invalid input");
             }
-
-            // Adding default user information
-            User defaultUser = new();
-            _configuration.GetSection("DefaultUser").Bind(defaultUser);
-            //
 
             Blog newBlog = new()
             {

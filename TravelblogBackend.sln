@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Core", "Travelbl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Dal", "Travelblog.Dal\Travelblog.Dal.csproj", "{22016881-57E4-4C1E-B5F7-C685F26C96AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Travelblog.Unittest", "Travelblog.Unittest\Travelblog.Unittest.csproj", "{7A7A774D-D86C-4117-94E4-F5A6C32906F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Travelblog.Tests", "Travelblog.Unittest\Travelblog.Tests.csproj", "{7A7A774D-D86C-4117-94E4-F5A6C32906F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
