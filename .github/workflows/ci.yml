@@ -40,7 +40,7 @@ jobs:
       run: dotnet restore
 
     - name: SonarCloud Begin Analysis
-      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.sources="Travelblog.Api,Travelblog.Core,Travelblog.Dal" /d:sonar.exclusions="**/*.http,**/appsettings.json" /d:sonar.test.exclusions="Travelblog.Tests/**,**/*.http,**/appsettings.json"
+      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.sources="Travelblog.Api,Travelblog.Core,Travelblog.Dal" /d:sonar.exclusions="**/*.http,**/appsettings*.json" /d:sonar.test.exclusions="Travelblog.Tests/**,**/*.http,**/appsettings*.json"
 
     - name: Build for SonarCloud Analysis
       run: dotnet build --no-incremental --configuration Release
