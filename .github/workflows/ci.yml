@@ -39,6 +39,7 @@ jobs:
     - name: SonarCloud Begin Analysis
       env:
         JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64
+        PATH: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64/bin:${{ env.PATH }}
       run: |
         dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
 
@@ -51,4 +52,5 @@ jobs:
     - name: SonarCloud End Analysis
       env:
         JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64
+        PATH: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64/bin:${{ env.PATH }}
       run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
