@@ -21,6 +21,12 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin' # or 'zulu', 'adopt'
+        java-version: '17'
+
     - name: Install .NET dependencies
       run: dotnet restore
 
