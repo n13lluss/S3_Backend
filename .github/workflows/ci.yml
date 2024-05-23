@@ -59,6 +59,11 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
+      - name: Remove sonar-project.properties
+        shell: powershell
+        run: |
+          Remove-Item -Path D:\a\S3_Backend\S3_Backend\sonar-project.properties -ErrorAction Ignore
+
       - name: Build and analyze with dotnet-coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
