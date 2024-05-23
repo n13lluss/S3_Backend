@@ -1,4 +1,5 @@
-name: SonarCloud
+name: SonarCloud Analysis
+
 on:
   push:
     branches:
@@ -7,77 +8,38 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
-    name: Build, Test, and Analyze with SonarCloud
-    runs-on: windows-latest
-
+  sonarcloud:
+    runs-on: ubuntu-latest
     steps:
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v2
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
         with:
-          java-version: 17
-          distribution: 'zulu'
-
-      - uses: actions/checkout@v3
+          java-version: 11
+      
+      - name: Install .NET Core SDK
+        uses: actions/setup-dotnet@v1
         with:
-          fetch-depth: 0
-
-      - name: Create SonarCloud cache directories
-        run: |
-          mkdir -p ~/sonar/cache
-          mkdir -p ./.sonar/scanner
-
-      - name: Print root directory structure
-        shell: powershell
-        run: |
-          Get-ChildItem -Path . -Recurse
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-          fail-on-cache-miss: false
-
-      - name: Cache SonarCloud scanner
-        uses: actions/cache@v3
-        with:
-          path: ./.sonar/scanner 
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
-          fail-on-cache-miss: false
-
-      - name: Install SonarCloud scanner
-        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-        shell: powershell
-        run: |
-          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-
-      - name: Install dotnet-coverage
-        shell: powershell
-        run: |
-          dotnet tool install --global dotnet-coverage
-
-      - name: Remove sonar-project.properties
-        shell: powershell
-        run: |
-          Remove-Item -Path D:\a\S3_Backend\S3_Backend\sonar-project.properties -ErrorAction Ignore
-
-      - name: Build and analyze with dotnet-coverage
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        shell: powershell
-        run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.inclusions="**/*Api/**,**/*Core/**,**/*Dal/**" /d:sonar.test.inclusions="**/*Unittest/**"
-          dotnet restore
-          dotnet build --no-incremental
-          dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults
-          dotnet-coverage collect "dotnet test --logger 'trx;LogFileName=TestResults.trx'" -f xml -o "coverage.xml"
-          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
-      - name: Validate coverage file
-        shell: powershell
-        run: |
-          if ((Get-Content "coverage.xml").Length -eq 0) { Write-Error "Coverage file is empty" }
+          dotnet-version: 3.1.x
+      
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build the solution
+        run: dotnet build --no-restore
+      
+      - name: Run tests and collect coverage
+        run: dotnet test --no-build --collect:"XPlat Code Coverage"
+      
+      - name: Prepare SonarCloud Analysis
+        run: dotnet tool install --global dotnet-sonarscanner
+      
+      - name: Begin SonarCloud Analysis
+        run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.opencover.xml"
+      
+      - name: Build the solution (SonarCloud)
+        run: dotnet build --no-incremental
+      
+      - name: End SonarCloud Analysis
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
