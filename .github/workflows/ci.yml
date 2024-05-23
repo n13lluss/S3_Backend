@@ -1,22 +1,86 @@
-     <range source_id="3" start_line="61" end_line="61" start_column="13" end_column="89" covered="partial" />
-            <range source_id="3" start_line="62" end_line="62" start_column="9" end_column="10" covered="yes" />
-          </ranges>
-        </function>
-        <function id="9864" token="0x600001b" name="GetUserById(string)" namespace="Travelblog.Core.Services" type_name="UserService" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="6" lines_covered="0" lines_partially_covered="0" lines_not_covered="6">
-          <ranges>
-            <range source_id="3" start_line="65" end_line="65" start_column="9" end_column="10" covered="no" />
-            <range source_id="3" start_line="66" end_line="66" start_column="13" end_column="37" covered="no" />
-            <range source_id="3" start_line="67" end_line="67" start_column="13" end_column="14" covered="no" />
-            <range source_id="3" start_line="68" end_line="68" start_column="17" end_column="29" covered="no" />
-            <range source_id="3" start_line="70" end_line="70" start_column="13" end_column="54" covered="no" />
-            <range source_id="3" start_line="71" end_line="71" start_column="9" end_column="10" covered="no" />
-          </ranges>
-        </function>
-        <function id="9912" token="0x600001c" name="GetUserByName(string)" namespace="Travelblog.Core.Services" type_name="UserService" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="3" lines_covered="0" lines_partially_covered="0" lines_not_covered="3">
-          <ranges>
-            <range source_id="3" start_line="74" end_line="74" start_column="9" end_column="10" covered="no" />
-            <range source_id="3" start_line="75" end_line="75" start_column="13" end_column="56" covered="no" />
-            <range source_id="3" start_line="76" end_line="76" start_column="9" end_column="10" covered="no" />
-          </ranges>
-        </function>
-        <function id="9944" token="0x600001d" name="RegisterUser(Travelblog.Core.Models.User)" namespace="Travelblog.Core.Services" type_name="UserService" block_coverage="0.00" line_coverage="0.00" blocks_covered="0" blocks_not_covered="3" lines_covered="0" lines_partially_covered="0" lines_not_covered="3">
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build, Test, and Analyze with SonarCloud
+    runs-on: windows-latest
+
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create SonarCloud cache directories
+        run: |
+          mkdir -p ~/sonar/cache
+          mkdir -p ./.sonar/scanner
+
+      - name: Print directory structure
+        run: |
+          ls -l ~
+          ls -l ./.sonar
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+          fail-on-cache-miss: true
+
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@v3
+        with:
+          path: ./.sonar/scanner 
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+          fail-on-cache-miss: true
+
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+
+      - name: Install dotnet-coverage
+        shell: powershell
+        run: |
+          dotnet tool install --global dotnet-coverage
+
+      - name: Remove sonar-project.properties if exists
+        shell: bash
+        run: |
+          if [ -f sonar-project.properties ]; then
+            rm sonar-project.properties
+          fi
+
+      - name: Build and analyze with dotnet-coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
+          dotnet restore
+          dotnet build --no-incremental 
+          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Print coverage report
+        shell: powershell
+        run: |
+          Get-Content .\coverage.xml
