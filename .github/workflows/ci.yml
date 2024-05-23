@@ -31,6 +31,8 @@ jobs:
         run: |
           ls -l ~
           ls -l ./.sonar
+          ls -l ./src
+          ls -l ./tests
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -70,14 +72,13 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
-          dotnet restore
-          dotnet build --no-incremental 
-          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.exclusions="**/tests/**"
+          dotnet restore ./src/ProjectName
+          dotnet build --no-incremental ./src/ProjectName
+          dotnet-coverage collect "dotnet test ./tests/ProjectName.Tests" -f xml -o "coverage.xml"
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Validate coverage file
         shell: powershell
         run: |
           if ((Get-Content "coverage.xml").Length -eq 0) { Write-Error "Coverage file is empty" }
-
