@@ -27,14 +27,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install dotnet-coverage tool
-      run: dotnet tool install --global dotnet-coverage
-
-    - name: Install dotnet-sonarscanner tool
-      run: dotnet tool install --global dotnet-sonarscanner
-
-    - name: Add .dotnet/tools to PATH
-      run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+    - name: Install dotnet-sonarscanner and dotnet-coverage tools
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+        dotnet tool install --global dotnet-coverage
+        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
     - name: Install .NET dependencies
       run: dotnet restore
@@ -42,16 +39,12 @@ jobs:
     - name: SonarCloud Begin Analysis
       run: |
         dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
-        
+
     - name: Build for SonarCloud Analysis
-      run: dotnet build --no-incremental --configuration Release
+      run: dotnet build --configuration Release
 
     - name: Run tests and collect code coverage
       run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o "coverage.xml"
 
     - name: SonarCloud End Analysis
       run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-    - name: Post job cleanup
-      run: |
-        git config --global --add safe.directory /home/runner/work/S3_Backend/S3_Backend
