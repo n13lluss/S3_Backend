@@ -19,7 +19,8 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -27,12 +28,10 @@ jobs:
         run: |
           mkdir -p ~/sonar/cache
           mkdir -p ./.sonar/scanner
-
       - name: Print directory structure
         run: |
           ls -l ~
           ls -l ./.sonar
-
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -54,33 +53,35 @@ jobs:
         shell: powershell
         run: |
           dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-
       - name: Install dotnet-coverage
         shell: powershell
         run: |
           dotnet tool install --global dotnet-coverage
-
+      - name: Remove sonar-project.properties if exists
+        shell: bash
+        run: |
+          if [ -f sonar-project.properties ]; then
+            rm sonar-project.properties
+          fi
       - name: Build and analyze with dotnet-coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
           dotnet restore
-          dotnet build --no-incremental
+          dotnet build --no-incremental 
           dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          mv "coverage.xml" "$(pwd)/coverage.xml"
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
       - name: Print coverage report
         shell: powershell
         run: |
           Get-Content .\coverage.xml
-
       - name: Print working directory
         run: |
           pwd
-
       - name: Print directory content
         run: |
           ls -R
