@@ -43,9 +43,9 @@ jobs:
           Remove-Item -Path "sonar-project.properties"
         }
 
-    - name: Run tests and collect coverage
+    - name: Run SonarScanner
       run: |
-        dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/*.xml"
+        dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/*.xml"
         dotnet build
         dotnet test --collect:"XPlat Code Coverage"
         dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
