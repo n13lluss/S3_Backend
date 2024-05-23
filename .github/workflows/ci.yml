@@ -19,7 +19,8 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -60,14 +61,21 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
+      - name: Remove sonar-project.properties if exists
+        shell: bash
+        run: |
+          if [ -f sonar-project.properties ]; then
+            rm sonar-project.properties
+          fi
+
       - name: Build and analyze with dotnet-coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
           dotnet restore
           dotnet build --no-incremental 
           dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
-          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
