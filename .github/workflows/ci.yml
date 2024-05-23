@@ -27,12 +27,10 @@ jobs:
           mkdir -p ~/sonar/cache
           mkdir -p ./.sonar/scanner
 
-      - name: Print directory structure
+      - name: Print root directory structure
         run: |
-          ls -l ~
-          ls -l ./.sonar
-          ls -l ./src
-          ls -l ./tests
+          ls -l
+          ls -l ./
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -73,9 +71,9 @@ jobs:
         shell: powershell
         run: |
           ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.exclusions="**/tests/**"
-          dotnet restore ./src/ProjectName
-          dotnet build --no-incremental ./src/ProjectName
-          dotnet-coverage collect "dotnet test ./tests/ProjectName.Tests" -f xml -o "coverage.xml"
+          dotnet restore
+          dotnet build --no-incremental 
+          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Validate coverage file
