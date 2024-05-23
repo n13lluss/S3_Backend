@@ -38,7 +38,7 @@ jobs:
           path: ~/sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-          fail-on-cache-miss: true
+          fail-on-cache-miss: false
 
       - name: Cache SonarCloud scanner
         uses: actions/cache@v3
@@ -46,7 +46,7 @@ jobs:
           path: ./.sonar/scanner 
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
-          fail-on-cache-miss: true
+          fail-on-cache-miss: false
 
       - name: Install SonarCloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
@@ -75,3 +75,9 @@ jobs:
           dotnet build --no-incremental 
           dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Validate coverage file
+        shell: powershell
+        run: |
+          if ((Get-Content "coverage.xml").Length -eq 0) { Write-Error "Coverage file is empty" }
+
