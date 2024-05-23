@@ -1,60 +1,92 @@
-name: .NET Core
+name: .NET
 
 on:
   push:
+    branches:
+      - master
+  pull_request:
     branches:
       - master
 
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Set up .NET Core
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.x'
+      - name: Install dependencies
+        run: dotnet restore
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
 
-    - name: Build
-      run: dotnet build --no-restore
+      - name: Publish build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: BuildOutput
+          path: |
+            **/bin/
+            **/obj/
 
-    - name: Install dotnet tools
-      run: dotnet tool install --global dotnet-sonarscanner
+  test:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install dotnet-coverage
-      run: dotnet tool install --global dotnet-coverage
+      - name: Download build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: BuildOutput
+          path: .
 
-    - name: Remove sonar-project.properties if exists
-      shell: pwsh
-      run: |
-        if (Test-Path -Path "sonar-project.properties") {
-          Remove-Item -Path "sonar-project.properties"
-        }
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Run SonarScanner
-      run: |
-        dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/*.xml"
-        dotnet build
-        dotnet test --collect:"XPlat Code Coverage"
-        dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Test with dotnet
+        run: dotnet test --no-build --logger:trx --results-directory $(System.DefaultWorkingDirectory)/TestResults --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(System.DefaultWorkingDirectory)/TestResults/
 
-    - name: Publish test results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: |
-          **/TestResults
-          !**/*.trx
+      - name: Publish Test Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: TestResults
+          path: $(System.DefaultWorkingDirectory)/TestResults
+
+  sonarcloud:
+    runs-on: windows-latest
+    needs: [build, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: BuildOutput
+          path: .
+
+      - name: Download test results
+        uses: actions/download-artifact@v2
+        with:
+          name: TestResults
+          path: .
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Begin SonarCloud scan
+        run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="$(System.DefaultWorkingDirectory)/TestResults/coverage.cobertura.xml"
+
+      - name: End SonarCloud scan
+        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
