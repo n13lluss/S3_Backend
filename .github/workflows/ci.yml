@@ -33,7 +33,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json" /d:sonar.visualstudio.enable=false /d:sonar.modules="A67D0A79-B1E9-428E-A50A-66D79BAC5D7F,22016881-57E4-4C1E-B5F7-C685F26C96AC,67869C66-D085-43AA-901D-D4B50D2E7BB2,7A7A774D-D86C-4117-94E4-F5A6C32906F6"
           dotnet restore
           dotnet build --no-incremental
           dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
