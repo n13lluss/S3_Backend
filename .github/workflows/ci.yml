@@ -46,7 +46,7 @@ jobs:
       run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
     - name: SonarCloud Begin Analysis
-      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml"
+      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml" /d:sonar.verbose=true
 
     - name: Build for SonarCloud Analysis
       run: dotnet build --no-incremental --configuration Release
