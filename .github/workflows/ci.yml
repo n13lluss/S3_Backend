@@ -40,6 +40,9 @@ jobs:
         run: |
           dotnet-coverage collect --output "TestResults/coverage.cobertura.xml" --output-format cobertura dotnet test --no-build --configuration Release
 
+      - name: Concatenate coverage report (if needed)
+        run: cat TestResults/coverage.cobertura.xml
+      
       - name: Install SonarScanner Global Tool
         run: dotnet tool install --global dotnet-sonarscanner
 
