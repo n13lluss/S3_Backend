@@ -1,92 +1,72 @@
-name: .NET
-
+name: SonarCloud
 on:
   push:
     branches:
       - master
   pull_request:
-    branches:
-      - master
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
+    name: Build, Test, and Analyze with SonarCloud
     runs-on: windows-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          dotnet-version: '8.0.x'
+          java-version: 17
+          distribution: 'zulu'
 
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore
-
-      - name: Publish build artifacts
-        uses: actions/upload-artifact@v2
+      - uses: actions/checkout@v3
         with:
-          name: BuildOutput
-          path: |
-            **/bin/
-            **/obj/
+          fetch-depth: 0
 
-  test:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Create SonarCloud cache directories
+        run: |
+          mkdir -p ~/sonar/cache
+          mkdir -p ./.sonar/scanner
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v2
+      - name: Print directory structure
+        run: |
+          ls -l ~
+          ls -l ./.sonar
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
         with:
-          name: BuildOutput
-          path: .
+          path: ~/sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+          fail-on-cache-miss: true
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@v3
         with:
-          dotnet-version: '8.0.x'
+          path: ./.sonar/scanner 
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+          fail-on-cache-miss: true
 
-      - name: Test with dotnet
-        run: dotnet test --no-build --logger:trx --results-directory $(System.DefaultWorkingDirectory)/TestResults --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(System.DefaultWorkingDirectory)/TestResults/
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
-      - name: Publish Test Results
-        uses: actions/upload-artifact@v2
-        with:
-          name: TestResults
-          path: $(System.DefaultWorkingDirectory)/TestResults
+      - name: Install dotnet-coverage
+        shell: powershell
+        run: |
+          dotnet tool install --global dotnet-coverage
 
-  sonarcloud:
-    runs-on: windows-latest
-    needs: [build, test]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: BuildOutput
-          path: .
-
-      - name: Download test results
-        uses: actions/download-artifact@v2
-        with:
-          name: TestResults
-          path: .
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Begin SonarCloud scan
-        run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="$(System.DefaultWorkingDirectory)/TestResults/coverage.cobertura.xml"
-
-      - name: End SonarCloud scan
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Build and analyze with dotnet-coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+          dotnet restore
+          dotnet build --no-incremental 
+          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
