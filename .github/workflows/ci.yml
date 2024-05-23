@@ -37,10 +37,11 @@ jobs:
       run: dotnet tool install --global dotnet-coverage
 
     - name: Remove sonar-project.properties if exists
+      shell: pwsh
       run: |
-        if [ -f sonar-project.properties ]; then
-          rm sonar-project.properties
-        fi
+        if (Test-Path -Path "sonar-project.properties") {
+          Remove-Item -Path "sonar-project.properties"
+        }
 
     - name: Run tests and collect coverage
       run: |
