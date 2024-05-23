@@ -28,9 +28,9 @@ jobs:
           mkdir -p ./.sonar/scanner
 
       - name: Print root directory structure
+        shell: powershell
         run: |
-          ls -l
-          ls -l ./
+          Get-ChildItem -Path . -Recurse
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
