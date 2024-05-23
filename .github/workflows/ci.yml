@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -27,17 +27,8 @@ jobs:
         distribution: 'temurin' # or 'zulu', 'adopt'
         java-version: '17'
 
-    - name: Install .NET dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
     - name: Install dotnet-coverage tool
       run: dotnet tool install --global dotnet-coverage
-
-    - name: Run tests and collect code coverage
-      run: dotnet-coverage collect --output "TestResults/coverage.cobertura.xml" --output-format cobertura dotnet test --no-build --configuration Release
 
     - name: Install dotnet-sonarscanner tool
       run: dotnet tool install --global dotnet-sonarscanner
@@ -45,11 +36,17 @@ jobs:
     - name: Add .dotnet/tools to PATH
       run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
+    - name: Install .NET dependencies
+      run: dotnet restore
+
     - name: SonarCloud Begin Analysis
-      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml" /d:sonar.verbose=true
+      run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.sources="Travelblog.Api,Travelblog.Core,Travelblog.Dal"
 
     - name: Build for SonarCloud Analysis
       run: dotnet build --no-incremental --configuration Release
+
+    - name: Run tests and collect code coverage
+      run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o "coverage.xml"
 
     - name: SonarCloud End Analysis
       run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
