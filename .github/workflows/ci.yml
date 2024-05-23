@@ -49,13 +49,20 @@ jobs:
     - name: Run tests and collect code coverage
       run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o "coverage.xml"
 
-    - name: Verify coverage file
+    - name: Verify and display coverage in table format
       run: |
         if [ ! -f "coverage.xml" ]; then
           echo "Coverage file not found!"
           exit 1
         fi
-        cat coverage.xml
+        echo "| Module | Block Coverage | Line Coverage |"
+        echo "|--------|----------------|---------------|"
+        xmllint --xpath "//module" coverage.xml | while read -r module; do
+          name=$(echo "$module" | xmllint --xpath 'string(//module/@name)' -)
+          block_coverage=$(echo "$module" | xmllint --xpath 'string(//module/@block_coverage)' -)
+          line_coverage=$(echo "$module" | xmllint --xpath 'string(//module/@line_coverage)' -)
+          echo "| $name | $block_coverage | $line_coverage |"
+        done
 
     - name: SonarCloud End Analysis
       run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
