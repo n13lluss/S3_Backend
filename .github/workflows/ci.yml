@@ -50,12 +50,6 @@ jobs:
         shell: powershell
         run: dotnet tool install --global dotnet-coverage
 
-      - name: Remove sonar-project.properties if exists
-        run: |
-          if [ -f sonar-project.properties ]; then
-            rm sonar-project.properties
-          fi
-
       - name: Build and analyze with dotnet-coverage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
