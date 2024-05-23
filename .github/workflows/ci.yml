@@ -49,6 +49,9 @@ jobs:
     - name: Run tests and collect code coverage
       run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o "coverage.xml"
 
+    - name: Verify coverage file
+      run: ls -l coverage.xml
+
     - name: SonarCloud End Analysis
       run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
