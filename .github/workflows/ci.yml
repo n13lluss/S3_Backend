@@ -38,8 +38,8 @@ jobs:
 
       - name: Run tests and collect coverage
         run: |
-          dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
-          coverlet ./path/to/test/project/bin/Release/net6.0/YourTestAssembly.dll --target "dotnet" --targetargs "test --no-build --configuration Release" --format opencover --output "coverage.opencover.xml"
+          dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
+          coverlet ./Travelblog.Unittest/bin/Release/net8.0/Travelblog.Tests.dll --target "dotnet" --targetargs "test --no-build --configuration Release" --format opencover --output "TestResults/coverage.opencover.xml"
 
       - name: Install SonarScanner Global Tool
         run: dotnet tool install --global dotnet-sonarscanner
@@ -50,7 +50,7 @@ jobs:
       - name: Begin SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths="coverage.opencover.xml"
+        run: dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
 
       - name: Build the solution (SonarCloud)
         run: dotnet build --no-incremental --configuration Release
