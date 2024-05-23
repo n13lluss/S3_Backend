@@ -1,56 +1,73 @@
-name: .NET Core CI/CD
+name: SonarCloud
 
 on:
   push:
     branches:
       - master
   pull_request:
-    branches:
-      - master
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build, Test, and Analyze with SonarCloud
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'zulu'
 
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '8.0.x'
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Set up Java 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Create SonarCloud cache directories
+        run: |
+          mkdir -p ~/sonar/cache
+          mkdir -p ./.sonar/scanner
 
-    - name: Install dotnet-sonarscanner and dotnet-coverage tools
-      run: |
-        dotnet tool install --global dotnet-sonarscanner
-        dotnet tool install --global dotnet-coverage
-        echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: Print directory structure
+        run: |
+          ls -l ~
+          ls -l ./.sonar
 
-    - name: Install .NET dependencies
-      run: dotnet restore
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+          fail-on-cache-miss: true
 
-    - name: SonarCloud Begin Analysis
-      env:
-        JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64
-        PATH: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64/bin:${{ env.PATH }}
-      run: |
-        dotnet sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" /d:sonar.verbose=true /d:sonar.inclusions="Travelblog.Api/**,Travelblog.Core/**,Travelblog.Dal/**" /d:sonar.test.inclusions="Travelblog.Tests/**" /d:sonar.exclusions="**/*.http,**/appsettings*.json,**/launchSettings.json"
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@v3
+        with:
+          path: ./.sonar/scanner 
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+          fail-on-cache-miss: true
 
-    - name: Build for SonarCloud Analysis
-      run: dotnet build --no-incremental --configuration Release
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
-    - name: Run tests and collect code coverage
-      run: dotnet-coverage collect "dotnet test --no-build --configuration Release" -f xml -o "coverage.xml"
+      - name: Install dotnet-coverage
+        shell: powershell
+        run: |
+          dotnet tool install --global dotnet-coverage
 
-    - name: SonarCloud End Analysis
-      env:
-        JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64
-        PATH: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17*/x64/bin:${{ env.PATH }}
-      run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      - name: Build and analyze with dotnet-coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
+        run: |
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"semester-3-backend" /o:"semester-3" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+          dotnet restore
+          dotnet build --no-incremental 
+          dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
