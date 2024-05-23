@@ -1,5 +1,4 @@
 name: SonarCloud
-
 on:
   push:
     branches:
@@ -19,8 +18,7 @@ jobs:
           java-version: 17
           distribution: 'zulu'
 
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -29,10 +27,15 @@ jobs:
           mkdir -p ~/sonar/cache
           mkdir -p ./.sonar/scanner
 
+      - name: Print directory structure
+        run: |
+          ls -l ~
+          ls -l ./.sonar
+
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
-          path: ~/.sonar/cache
+          path: ~/sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
           fail-on-cache-miss: true
@@ -53,7 +56,8 @@ jobs:
 
       - name: Install dotnet-coverage
         shell: powershell
-        run: dotnet tool install --global dotnet-coverage
+        run: |
+          dotnet tool install --global dotnet-coverage
 
       - name: Build and analyze with dotnet-coverage
         env:
